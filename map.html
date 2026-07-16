@@ -16,7 +16,6 @@
     .map-container { position: relative; flex: 1; min-height: 0; }
     #map { position: absolute; inset: 0; }
 
-    /* Route panel — overlay บนแผนที่ด้านซ้ายบน */
     .route-panel {
       width: 300px;
       flex-shrink: 0;
@@ -31,7 +30,6 @@
       position: relative;
       transition: width 0.2s, padding 0.2s;
     }
-    /* Custom autocomplete dropdown */
     .search-field-wrap { position: relative; margin-bottom: 8px; }
     .search-field-wrap input {
       width: 100%; box-sizing: border-box;
@@ -80,7 +78,6 @@
     .route-panel.collapsed { width: 0; padding: 0; overflow: hidden; border: none; }
     .map-container { position: relative; }
 
-    /* Mode tabs */
     .panel-mode-tabs {
       display: flex; gap: 4px; margin-bottom: 14px;
       background: var(--surface, #f4f7f9); border-radius: 10px; padding: 4px;
@@ -95,7 +92,6 @@
     .panel-mode-content { display: none; }
     .panel-mode-content.active { display: block; }
 
-    /* Flood period selector */
     .flood-period-tabs {
       display: flex; gap: 4px; margin-bottom: 12px;
     }
@@ -299,9 +295,7 @@
       </header>
 
       <section class="content">
-        <!-- Route panel overlay -->
         <div class="route-panel" id="routePanel">
-          <!-- Mode tabs -->
           <div class="panel-mode-tabs">
             <button class="panel-mode-tab active" id="modeNavBtn">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"></circle><circle cx="18" cy="5" r="3"></circle><path d="M9 19h3a4 4 0 0 0 4-4V8"></path></svg>
@@ -313,7 +307,6 @@
             </button>
           </div>
 
-          <!-- Mode: นำทาง -->
           <div class="panel-mode-content active" id="modeNavContent">
             <div class="route-input-wrap">
               <div class="search-field-wrap">
@@ -341,10 +334,8 @@
             </div>
           </div>
 
-          <!-- Mode: ข้อมูลน้ำท่วม -->
           <div class="panel-mode-content" id="modeFloodContent">
 
-            <!-- เลือกช่วงเวลาน้ำท่วม GISTDA -->
             <div style="margin-bottom:12px;">
               <div style="font-size:0.76rem;font-weight:700;color:#0f1e2a;margin-bottom:6px;">พื้นที่น้ำท่วม GISTDA</div>
               <div class="flood-period-tabs">
@@ -356,7 +347,6 @@
               <div id="floodPeriodStatus" style="font-size:0.72rem;color:#66717d;margin-top:4px;"></div>
             </div>
 
-            <!-- เลเยอร์เพิ่มเติม -->
             <div style="margin-bottom:12px;padding-top:10px;border-top:1px solid #e8edf0;">
               <div style="font-size:0.76rem;font-weight:700;color:#0f1e2a;margin-bottom:8px;">เลเยอร์เพิ่มเติม</div>
               <div style="display:flex;flex-direction:column;gap:7px;">
@@ -375,7 +365,6 @@
               </div>
             </div>
 
-            <!-- Legend -->
             <div style="padding-top:10px;border-top:1px solid #e8edf0;font-size:0.8rem;">
               <div style="font-size:0.72rem;font-weight:700;color:#0f1e2a;margin-bottom:6px;">สัญลักษณ์</div>
               <div class="legend-row"><div class="legend-dot" style="background:rgba(30,144,255,0.7);border:1px solid #1e90ff;"></div>น้ำท่วม</div>
@@ -416,7 +405,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="js/bundle.js"></script>
 
-  <!-- Google Maps JS API -->
   <script>
     let acService, sessionToken;
 
@@ -471,7 +459,7 @@
       input.addEventListener('focus', () => { if (dropdown.children.length > 0) dropdown.classList.add('open'); });
     }
 
-    window.initMap = function() { /* triggered by callback */ };
+    window.initMap = function() { };
   </script>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey &libraries=places&callback=initMap&language=th&region=TH">
@@ -513,10 +501,6 @@
       if (status === 'rescued') return '#16a34a';
       return { critical: '#dc2626', high: '#dc2626', medium: '#d97706', low: '#16a34a' }[severity] || '#2d86bf';
     }
-
-    // ==========================================
-    // Init Google Map
-    // ==========================================
 
     function setupSearchField(inputId, dropdownId) {
       const input = document.getElementById(inputId);
@@ -586,14 +570,12 @@
         polylineOptions: { strokeColor: '#2d86bf', strokeWeight: 5 }
       });
 
-      // Custom autocomplete using PlacesService
       setupSearchField('originInput', 'originDropdown');
       setupSearchField('destInput', 'destDropdown');
 
       loadFloodPosts();
       loadShelterMarkers();
 
-      // รับ lat/lng จาก query string (มาจากหน้า feed)
       const urlParams = new URLSearchParams(window.location.search);
       const qLat  = parseFloat(urlParams.get('lat'));
       const qLng  = parseFloat(urlParams.get('lng'));
@@ -616,9 +598,6 @@
       }
     };
 
-    // ==========================================
-    // โหลดโพสต์น้ำท่วมจาก Supabase → วาง marker
-    // ==========================================
     async function loadFloodPosts() {
       const { data: posts } = await sb.from('posts')
         .select('id, caption, latitude, longitude, severity, status, user_id, profiles!posts_user_id_fkey ( username, display_name, avatar_url )')
@@ -676,9 +655,6 @@
       });
     }
 
-    // ==========================================
-    // ระบุตำแหน่งปัจจุบัน
-    // ==========================================
     document.getElementById('locateMeBtn').addEventListener('click', () => {
       if (!navigator.geolocation) { showToast('เบราว์เซอร์ไม่รองรับ Geolocation'); return; }
       navigator.geolocation.getCurrentPosition((pos) => {
@@ -690,9 +666,6 @@
       }, () => showToast('ไม่สามารถเข้าถึงตำแหน่งได้'));
     });
 
-    // ==========================================
-    // คำนวณเส้นทาง
-    // ==========================================
     document.getElementById('calcRouteBtn').addEventListener('click', calcRoute);
 
     async function calcRoute() {
@@ -705,7 +678,6 @@
       btn.disabled = true;
       btn.textContent = 'กำลังคำนวณ...';
 
-      // ดึงโพสต์ severity critical/high เพื่อเป็น waypoints หลีกเลี่ยง
       const { data: floodPosts } = await sb.from('posts')
         .select('latitude, longitude')
         .eq('is_archived', false)
@@ -737,7 +709,6 @@
         document.getElementById('routeDist').textContent = leg.distance.text;
         document.getElementById('routeDur').textContent  = leg.duration.text;
 
-        // แสดง steps
         const stepsEl = document.getElementById('routeSteps');
         stepsEl.innerHTML = '';
         leg.steps.forEach((step, i) => {
@@ -755,9 +726,6 @@
       });
     }
 
-    // ==========================================
-    // ล้างเส้นทาง
-    // ==========================================
     document.getElementById('clearRouteBtn').addEventListener('click', () => {
       directionsRenderer.setDirections({ routes: [] });
       document.getElementById('routeSummary').classList.remove('show');
@@ -765,9 +733,6 @@
       document.getElementById('destInput').value = '';
     });
 
-    // ==========================================
-    // Auth + sidebar
-    // ==========================================
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'auth.html'; return; }
@@ -806,42 +771,24 @@
       floodMarkers.forEach(m => m.setMap(show ? map : null));
     });
 
-
-    // ==========================================
-    // Flood Risk Prediction System v2
-    // Data: GloFAS river discharge + Google Elevation + Open-Meteo rain + Supabase
-    // ==========================================
-
     let currentFloodPolygons = [];
     let forecastPolygons = [];
 
     const THAILAND_BBOX = { minLat: 5.5, maxLat: 20.5, minLng: 97.5, maxLng: 105.7 };
     const GRID_STEP = 0.5;
 
-    // Key river points ในไทย (แม่น้ำหลัก)
     const THAI_RIVERS = [
-      // เจ้าพระยา
       {lat:13.75,lng:100.5},{lat:14.35,lng:100.56},{lat:15.2,lng:100.12},
       {lat:15.68,lng:100.1},{lat:16.43,lng:99.9},
-      // ปิง
       {lat:18.78,lng:99.0},{lat:17.5,lng:99.5},{lat:16.43,lng:99.9},
-      // วัง
       {lat:18.3,lng:99.5},{lat:17.6,lng:99.7},
-      // ยม
       {lat:17.99,lng:100.2},{lat:16.8,lng:100.2},
-      // น่าน
       {lat:18.78,lng:100.78},{lat:17.6,lng:100.5},
-      // ชี
       {lat:15.87,lng:102.02},{lat:16.44,lng:102.83},{lat:15.57,lng:103.5},
-      // มูล
       {lat:15.0,lng:103.5},{lat:14.8,lng:104.5},{lat:15.16,lng:105.11},
-      // โขง
       {lat:17.9,lng:102.6},{lat:18.2,lng:103.5},{lat:19.4,lng:102.1},
-      // แม่กลอง
       {lat:13.55,lng:99.8},{lat:14.2,lng:99.6},
-      // บางปะกง
       {lat:13.42,lng:101.0},{lat:13.7,lng:101.2},
-      // ตาปี
       {lat:9.13,lng:99.33},{lat:8.5,lng:99.5},
     ];
 
@@ -860,25 +807,18 @@
       document.getElementById('predictionStatus').textContent = '';
     }
 
-    // ---- Thailand boundary (ray-casting, corrected polygon) ----
-    // ขอบประเทศไทยแบบง่าย สำหรับกรอง cell นอกประเทศออก
     const TH_POLY = [
-      // ภาคใต้ฝั่งตะวันตก (อันดามัน)
       [98.77,5.63],[99.03,5.64],[99.38,5.83],[99.69,6.28],[100.09,6.41],[100.35,6.54],
       [100.75,6.22],[100.98,5.64],[101.48,5.53],[101.89,5.81],[102.1,6.24],
-      // ภาคใต้ฝั่งตะวันออก (อ่าวไทย)
       [102.55,7.07],[102.92,7.82],[103.08,8.30],[103.05,9.04],[102.82,9.92],
       [102.49,10.78],[101.97,11.61],[101.40,12.22],[100.92,12.67],[100.63,13.06],
-      // ภาคกลาง-ภาคตะวันออก
       [100.89,13.44],[101.28,13.84],[101.77,14.17],[102.33,14.37],[102.92,14.37],
       [103.44,14.29],[103.98,14.40],[104.55,14.36],[105.05,14.66],[105.54,15.03],
       [105.60,15.44],[105.48,15.84],[105.19,16.21],[104.84,16.69],[104.49,17.13],
-      // ภาคตะวันออกเฉียงเหนือ-ภาคเหนือ
       [104.10,17.42],[103.58,17.93],[103.09,18.28],[102.71,17.95],[102.29,17.89],
       [101.85,18.03],[101.30,18.27],[100.97,18.55],[100.68,18.80],[100.44,19.10],
       [100.09,19.51],[99.62,19.82],[99.21,20.07],[98.93,19.74],[98.54,19.67],
       [98.16,19.74],[97.82,20.14],[97.65,20.49],
-      // ภาคเหนือตะวันตก
       [97.78,20.08],[97.95,19.47],[98.23,18.81],[98.55,18.36],[98.74,17.80],
       [98.54,17.18],[98.36,16.59],[98.10,15.88],[97.78,15.18],[97.68,14.44],
       [97.69,13.72],[97.88,13.05],[98.29,12.33],[98.64,11.63],[98.94,10.94],
@@ -898,13 +838,12 @@
       return inside;
     }
 
-    // ---- Yellow-only risk scale (ไม่ใช้สีแดง เป็น warning เท่านั้น) ----
     function riskToColor(score) {
-      if (score < 55 || score >= 100) return null;           // ต่ำกว่า 55 ไม่แสดง
-      if (score < 65) return { fill: '#fef08a', opacity: 0.50, r: 10 };  // เหลืองอ่อน
-      if (score < 75) return { fill: '#fde047', opacity: 0.58, r: 12 };  // เหลือง
-      if (score < 85) return { fill: '#facc15', opacity: 0.65, r: 14 };  // เหลืองเข้ม
-      return              { fill: '#eab308', opacity: 0.72, r: 16 };     // อำพัน (สูงสุด)
+      if (score < 55 || score >= 100) return null;
+      if (score < 65) return { fill: '#fef08a', opacity: 0.50, r: 10 };
+      if (score < 75) return { fill: '#fde047', opacity: 0.58, r: 12 };
+      if (score < 85) return { fill: '#facc15', opacity: 0.65, r: 14 };
+      return              { fill: '#eab308', opacity: 0.72, r: 16 };
     }
 
     function showRiskInfo(latLng, cell) {
@@ -935,9 +874,8 @@
         const col = riskToColor(s);
 
         if (s >= 100) continue;
-        
+
         if (col) {
-          // วงกลมเดี่ยว ขนาดตาม risk (ไม่ระบายทั้งแผนที่)
           const circ = new google.maps.Circle({
             center: { lat: cell.lat, lng: cell.lng },
             radius: col.r * 1000,
@@ -950,7 +888,6 @@
           if (s >= 75) high++; else med++;
         }
 
-        // 7d forecast — วงกลมเล็กลง opacity น้อยลง
         if (s7d >= 55 && s < 55) {
           const fc = riskToColor(s7d);
           if (fc) {
@@ -972,7 +909,6 @@
       const statusEl = document.getElementById('predictionStatus');
       clearAllPrediction();
 
-      // ลองดึง backend LSTM ก่อน
       const BACKEND = window.FLOODSENSE_BACKEND || 'http://localhost:8000';
       try {
         statusEl.textContent = '⏳ ดึงผล LSTM จาก backend...';
@@ -980,7 +916,6 @@
         if (res.ok) { renderCells((await res.json()).cells || [], statusEl); return; }
       } catch {}
 
-      // Fallback: คำนวณใน browser
       statusEl.textContent = '⏳ ดึงข้อมูล GloFAS...';
       const glofasData = await fetchGloFASData(THAI_RIVERS);
 
@@ -1018,7 +953,6 @@
           if (d < 1.5) riverScore = Math.max(riverScore, rv.currentScore * Math.max(0, 1 - d/1.5));
         }
 
-        // discharge ratio vs 30d mean เป็น predictor หลัก
         const dischargeRisk = Math.min(Math.max(0, (nearestRatio - 1.2) / 1.3) * 100, 100);
         const elevRisk      = Math.max(0, Math.min((80 - elev) / 80 * 100, 100));
         const rainRisk      = Math.min((rain3d / 100 * 45) + (rain7d / 200 * 55), 100);
@@ -1033,11 +967,8 @@
       renderCells(cells, statusEl);
     }
 
-
-    // ---- GloFAS River Discharge (past 30d + forecast 16d) ----
     async function fetchGloFASData(riverPoints) {
       const results = [];
-      // sample ทุก 3 จุดเพื่อประหยัด requests
       const sample = riverPoints.filter((_, i) => i % 3 === 0);
 
       await Promise.all(sample.map(async (pt) => {
@@ -1056,14 +987,10 @@
             ? historical30.reduce((a, b) => a + b, 0) / historical30.length
             : 50;
 
-          // current = วันนี้
           const currentDischarge = values[30] ?? values[values.length - 1] ?? 0;
-          // ratio vs historical mean
           const ratio = historicalMean > 0 ? currentDischarge / historicalMean : 1;
-          // score: ratio > 2 = max risk
           const currentScore = Math.min((ratio - 1) / 1.5 * 100, 100);
 
-          // forecast trend (next 7 days)
           const forecast7d = d.river_discharge_max?.slice(30, 37) ?? [];
           const maxForecast = forecast7d.length ? Math.max(...forecast7d.filter(v => v !== null)) : currentDischarge;
           const forecastRatio = historicalMean > 0 ? maxForecast / historicalMean : 1;
@@ -1079,7 +1006,6 @@
       return results;
     }
 
-    // ---- Open-Meteo: ฝน + discharge พยากรณ์ ----
     async function fetchRainAndFloodForecast(gridPoints) {
       const rainMap = {};
       const sample = gridPoints.filter((_, i) => i % 4 === 0);
@@ -1108,7 +1034,6 @@
       return rainMap;
     }
 
-    // ---- Google Elevation ----
     async function fetchElevations(gridPoints) {
       const elevMap = {};
       const elevator = new google.maps.ElevationService();
@@ -1129,7 +1054,6 @@
       return elevMap;
     }
 
-    // ---- Community Posts ----
     async function fetchCommunityData(gridPoints) {
       const communityMap = {};
       const { data: posts } = await sb.from('posts')
@@ -1152,29 +1076,20 @@
       return communityMap;
     }
 
-
-    // ==========================================
-    // GISTDA API Configuration
-    // ==========================================
-    // GISTDA credentials belong in the Python service (.env), never in browser code.
-    const GISTDA_KEY = 'FloodInfoKey'; // <-- ใส่ API Key ของ GISTDA ตรงนี้เพื่อให้แผนที่ดึงข้อมูลสดได้สมบูรณ์ครับ
+    const GISTDA_KEY = 'FloodInfoKey';
     const GISTDA_BASE = 'https://api-gateway.gistda.or.th/api/2.0/resources/maps';
 
     let gistdaFreqLayer = null;
     let gistda1dayLayer = null;
 
-    // ---- WMTS tile URL builder (WebMercatorQuad) ----
     function gistdaTileUrl(endpoint) {
       return (coord, zoom) => {
-        // กัน request tile ที่ index ไม่ถูกต้อง (เช่น world wrap ที่ zoom ต่ำ)
         const max = Math.pow(2, zoom);
         if (coord.x < 0 || coord.y < 0 || coord.x >= max || coord.y >= max) return null;
         return `${GISTDA_BASE}/${endpoint}/wmts/${zoom}/${coord.x}/${coord.y}.png?api_key=${GISTDA_KEY}`;
       };
     }
 
-    // ---- ตรวจสอบว่า GISTDA API ใช้งานได้จริงหรือไม่ (key / endpoint ถูกต้องไหม) ----
-    // เรียกครั้งแรกที่ผู้ใช้เปิดสวิตช์ เพื่อรายงานสาเหตุที่แท้จริงถ้าเลเยอร์ไม่ขึ้น
     async function verifyGistdaLayer(endpoint, label) {
       const statusEl = document.getElementById('predictionStatus');
       const testUrl = `${GISTDA_BASE}/${endpoint}/wmts/8/103/48.png?api_key=${GISTDA_KEY}`;
@@ -1195,7 +1110,6 @@
       }
     }
 
-    // 1. ฟังก์ชันสำหรับแปลงพิกัด Tile (X, Y, Zoom) ของ Google Maps ให้เป็น EPSG:3857 BBOX (เมตร)
     function getBounds3857(x, y, zoom) {
       const maxExtent = 20037508.342789244;
       const tileSize = (maxExtent * 2) / Math.pow(2, zoom);
@@ -1203,27 +1117,22 @@
       const maxX = minX + tileSize;
       const maxY = maxExtent - y * tileSize;
       const minY = maxY - tileSize;
-      // คืนค่ารูปแบบ BBOX: minX,minY,maxX,maxY
       return `${minX},${minY},${maxX},${maxY}`;
     }
 
-    // 2. ฟังก์ชันสร้างเลเยอร์ Google Maps ImageMapType ด้วยโปรโตคอล WMS
     function makeGistdaWmsLayer(endpoint, name, opacity = 0.7) {
       return new google.maps.ImageMapType({
         getTileUrl: (coord, zoom) => {
           const max = Math.pow(2, zoom);
-          // ป้องกันการโหลดไทล์ที่อยู่นอกขอบเขตแผนที่โลก
           if (coord.x < 0 || coord.y < 0 || coord.x >= max || coord.y >= max) return null;
-          
-          // คำนวณหา Bounding Box
+
           const bbox = getBounds3857(coord.x, coord.y, zoom);
-          
-          // ประกอบ URL เรียกแผนที่แบบ WMS 1.1.1
+
           return `${GISTDA_BASE}/${endpoint}/wms` +
                  `?service=WMS` +
                  `&request=GetMap` +
                  `&version=1.1.1` +
-                 `&layers=vallaris-blank` + // ใช้ Layer Name ตามที่ระบุใน GetCapabilities XML ที่คุณดึงมา
+                 `&layers=vallaris-blank` +
                  `&styles=` +
                  `&format=image/png` +
                  `&transparent=true` +
@@ -1234,18 +1143,16 @@
                  `&api_key=${GISTDA_KEY}`;
         },
         tileSize: new google.maps.Size(256, 256),
-        minZoom: 0, 
+        minZoom: 0,
         maxZoom: 19,
         opacity,
         name
       });
     }
 
-    // ---- Toggle: น้ำท่วมซ้ำซาก (flood-freq) ----
     document.getElementById('toggleFloodFreq').addEventListener('change', (e) => {
       if (e.target.checked) {
         if (!gistdaFreqLayer) {
-          // เปลี่ยนตรงนี้เป็น makeGistdaWmsLayer
           gistdaFreqLayer = makeGistdaWmsLayer('flood-freq', 'GISTDA Flood Freq', 0.65);
         }
         map.overlayMapTypes.push(gistdaFreqLayer);
@@ -1257,20 +1164,16 @@
       }
     });
 
-    // flood period handled by setFloodPeriodLayer()
-
-    // ---- Daily refresh: ดึง GISTDA features วันละครั้ง ----
     const CACHE_KEY = 'gistda_flood_cache';
-    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 ชั่วโมง
+    const CACHE_TTL = 24 * 60 * 60 * 1000;
 
     async function refreshGistdaDaily() {
       try {
         const cached = sessionStorage.getItem(CACHE_KEY);
         if (cached) {
           const { ts } = JSON.parse(cached);
-          if (Date.now() - ts < CACHE_TTL) return; // ยังไม่ครบ 24 ชั่วโมง
+          if (Date.now() - ts < CACHE_TTL) return;
         }
-        // ดึงข้อมูลใหม่
         const res = await fetch(
           `https://api-gateway.gistda.or.th/api/2.0/resources/features/flood/1day?limit=100&offset=0&api_key=${GISTDA_KEY}`,
           { headers: { 'accept': 'application/json' } }
@@ -1287,14 +1190,6 @@
       }
     }
 
-    // ==========================================
-    // AI Risk Model (LSTM-style weighted scoring)
-    // ดึงข้อมูล: flood-freq WMTS + Open-Meteo rain + Google Elevation
-    // คำนวณ risk score ต่อ grid cell แล้วแสดงบนแผนที่
-    // ==========================================
-
-
-    // ---- Mode tabs ----
     document.getElementById('modeNavBtn').addEventListener('click', () => {
       document.getElementById('modeNavBtn').classList.add('active');
       document.getElementById('modeFloodBtn').classList.remove('active');
@@ -1308,7 +1203,6 @@
       document.getElementById('modeNavContent').classList.remove('active');
     });
 
-    // ---- Flood period selector (1day / 3days / 7days / 30days) ----
     let activeFloodLayer = null;
     const floodLayerCache = {};
 
@@ -1323,12 +1217,10 @@
 
     function setFloodPeriodLayer(period) {
       const statusEl = document.getElementById('floodPeriodStatus');
-      // ลบ layer เดิมออก
       if (activeFloodLayer) {
         const idx = map.overlayMapTypes.getArray().indexOf(activeFloodLayer);
         if (idx > -1) map.overlayMapTypes.removeAt(idx);
       }
-      // สร้างหรือดึง layer จาก cache
       if (!floodLayerCache[period]) {
         const endpoint = `flood/${period}`;
         floodLayerCache[period] = makeGistdaWmsLayer(endpoint, `GISTDA ${period}`, 0.75);
@@ -1340,13 +1232,10 @@
       statusEl.textContent = `แสดงพื้นที่น้ำท่วม ${labels[period] || period} · GISTDA`;
     }
 
-    // เปิด 1day เป็น default เมื่อสลับไปโหมดน้ำท่วม
     document.getElementById('modeFloodBtn').addEventListener('click', () => {
       if (!activeFloodLayer) setFloodPeriodLayer('1day');
     });
 
-
-    // ---- Shelter markers from Supabase ----
     let shelterMarkers = [];
 
     async function loadShelterMarkers() {
@@ -1403,16 +1292,11 @@
       window.location.href = 'auth.html';
     }
 
-    // Server-produced daily LSTM output. This replaces the earlier browser-side
-    // "LSTM-style" calculator: the browser only reads the cached JSON artifact.
     (() => {
       let riskOverlays = [];
       const oldToggle = document.getElementById('toggleFloodPrediction');
-      const toggle = oldToggle.cloneNode(true); // discard older direct-API listener
+      const toggle = oldToggle.cloneNode(true);
       oldToggle.replaceWith(toggle);
-
-      // [นำโค้ดในส่วนแทนที่ (Clone) ปุ่ม GISTDA toggleFloodFreq และ toggleFlood1day ออกเรียบร้อยแล้ว]
-      // เพื่อให้ Event Listener ดั้งเดิมที่กำหนดเลเยอร์ทำงานร่วมกับเซิร์ฟเวอร์ GISTDA ได้อย่างสมบูรณ์
 
       const clearRisk = () => {
         riskOverlays.forEach(overlay => overlay.setMap(null));
@@ -1435,7 +1319,7 @@
           for (const cell of data.cells || []) {
             const risk = Number(cell.risk_7d || 0);
             if (risk < 55 || risk >= 100) continue;
-            
+
             const circle = new google.maps.Circle({
               map,
               center: { lat: Number(cell.lat), lng: Number(cell.lng) },
