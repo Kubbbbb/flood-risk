@@ -47,7 +47,7 @@
     .user-feed-section { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
     .user-feed-title { font-size: 1rem; font-weight: 700; color: var(--ink); margin: 0 0 4px; }
 
-    /* Post card (reuse from feed.html) */
+
     .post-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
     .post-head { display: flex; gap: 12px; align-items: flex-start; }
     .post-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: #2d86bf; flex-shrink: 0; }
@@ -117,7 +117,7 @@
 <body>
   <div class="app">
 
-    <!-- ========================================== Sidebar ========================================== -->
+
     <aside class="sidebar" aria-label="เมนูหลัก">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -178,7 +178,7 @@
       </div>
     </aside>
 
-    <!-- ========================================== Main ========================================== -->
+
     <main class="main">
       <header class="topbar">
         <div>
@@ -272,7 +272,7 @@
         return;
       }
 
-      // ถ้ากดดูตัวเอง ให้ redirect ไป profile.html
+  
       if (targetUserId === currentUser.id) {
         window.location.href = 'profile.html';
         return;
