@@ -28,7 +28,7 @@
     .sidebar-menu-item.danger { color: #f87171; }
     .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
 
-    /* Shelter layout */
+
     .shelter-layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: start; }
     @media (max-width: 900px) { .shelter-layout { grid-template-columns: 1fr; } }
 
@@ -76,7 +76,7 @@
     }
     .shelter-edit-btn:hover { background: rgba(45,134,191,0.08); }
 
-    /* Form */
+
     .shelter-form-panel {
       background: var(--panel); border: 1px solid var(--line);
       border-radius: 12px; padding: 18px; position: sticky; top: 20px;
@@ -169,11 +169,11 @@
 
       <section class="content">
         <div class="shelter-layout">
-          <!-- รายการศูนย์ -->
+     
           <div>
             <div id="shelterList"><div class="empty-shelters">กำลังโหลด...</div></div>
           </div>
-          <!-- ฟอร์มเพิ่มศูนย์ -->
+        
           <div class="shelter-form-panel">
             <h3>➕ เพิ่มศูนย์พักพิง</h3>
             <form id="shelterForm">
@@ -241,7 +241,7 @@
     </div>
   </div>
 
-  <!-- Edit shelter modal -->
+ 
   <div class="modal" id="editShelterModal" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:center;justify-content:center;">
     <div class="dialog" style="max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">
       <div class="dialog-head">
@@ -386,7 +386,7 @@
       else { showToast('ลบแล้ว'); loadShelters(); }
     }
 
-    // Location autocomplete
+ 
     let acDebounce;
     document.getElementById('sLocationSearch').addEventListener('input', (e) => {
       clearTimeout(acDebounce);
@@ -457,7 +457,7 @@
       btn.disabled = false; btn.textContent = 'บันทึกศูนย์พักพิง';
       if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message); return; }
 
-      // reset form
+
       document.getElementById('shelterForm').reset();
       selectedLat = selectedLng = null;
       document.getElementById('sLocationSelected').textContent = '';
@@ -467,7 +467,7 @@
 
 
     function openEditShelter(id) {
-      // หาข้อมูลจาก DOM ที่โหลดมาแล้ว โดย query supabase
+    
       sb.from('shelters').select('*').eq('id', id).single().then(({ data: s }) => {
         if (!s) return;
         document.getElementById('editShelterId').value = s.id;
