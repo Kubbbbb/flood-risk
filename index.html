@@ -45,7 +45,6 @@
     .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
   </style>
   <style>
-    /* ===== Dashboard grid ===== */
     .dash-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -56,7 +55,6 @@
     .dash-tall { grid-row: span 2; }
     @media (max-width: 960px) { .dash-grid { grid-template-columns: 1fr; } .dash-tall { grid-row: auto; } }
 
-    /* ===== Metric cards ===== */
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 0; }
     @media (max-width: 960px) { .metrics { grid-template-columns: repeat(2,1fr); } }
     .metrics .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
@@ -65,10 +63,8 @@
     .metrics .metric strong { display: block; font-size: 1.8rem; font-weight: 800; color: var(--ink); line-height: 1; margin-bottom: 4px; }
     .metrics .metric small { font-size: 0.72rem; color: var(--muted); }
 
-    /* ===== Section eyebrow ===== */
     .section-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 20px 0 0; }
 
-    /* ===== Forecast ===== */
     .forecast-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
     .forecast-day {
       flex: 1; min-width: 0; text-align: center;
@@ -85,7 +81,6 @@
     .forecast-day.very-high { border-color: #1d4ed8; background: rgba(29,78,216,0.05); }
     .forecast-loading { color: var(--muted); font-size: 0.84rem; padding: 8px 0; }
 
-    /* ===== SOS list ===== */
     .sos-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
     .sos-item:last-child { border-bottom: none; }
     .sos-dot { flex-shrink:0; width:8px; height:8px; border-radius:50%; margin-top:6px; }
@@ -102,7 +97,6 @@
     .sos-sev.medium { background:rgba(234,179,8,0.1);color:#ca8a04; }
     .sos-sev.low { background:rgba(54,163,103,0.1);color:#16a34a; }
 
-    /* ===== River cards ===== */
     .river-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
     @media (max-width:960px) { .river-grid { grid-template-columns:repeat(2,1fr); } }
     .river-card { padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
@@ -115,11 +109,9 @@
     .river-bar-fill { height: 100%; border-radius: 2px; background: #2d86bf; }
     .river-bar-fill.danger { background: #dc2626; }
 
-    /* ===== GISTDA ===== */
     .gistda-ok { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 0.88rem; color: var(--safe); font-weight: 600; }
     .gistda-warn { color: #dc2626; font-size: 0.9rem; font-weight: 700; }
 
-    /* ===== Shelter list ===== */
     .shelter-dash-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); }
     .shelter-dash-item:last-child { border-bottom:none; }
     .shelter-dash-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -133,7 +125,6 @@
 
     .dash-loading { color: var(--muted); font-size: 0.84rem; padding: 10px 0; }
 
-    /* ---- Topbar: greeting + refresh ---- */
     .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .topbar-actions { display: flex; align-items: center; gap: 10px; }
     .topbar-updated { font-size: 0.76rem; color: var(--muted); white-space: nowrap; }
@@ -149,7 +140,6 @@
     .refresh-btn:disabled { opacity: 0.6; cursor: default; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ---- Overall status banner ---- */
     .status-banner {
       display: flex; align-items: center; gap: 14px;
       padding: 16px 18px; border-radius: 12px; margin-top: 16px;
@@ -174,7 +164,6 @@
     .status-banner.danger .status-icon { background: rgba(220,38,38,0.14); color: #dc2626; }
     .status-banner.danger .status-title { color: #dc2626; }
 
-    /* ---- Metric card emphasis ---- */
     .metric.metric-alert strong { color: #dc2626; }
     .metric-icon { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-left: 4px; vertical-align: -2px; }
 
@@ -195,7 +184,6 @@
         <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
       </div>
 
-
       <nav class="nav">
         <p> ภาพรวม </p>
         <a class="active" title="ภาพรวม">
@@ -214,7 +202,7 @@
         </a>
         <a href="chat.html" title="AI Chatbot">
           <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
-          AI ผู้ช่วย
+          AI ผู้ช่วย
         </a>
         <a href="learn.html" title="คู่มือ">
           <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
@@ -222,7 +210,6 @@
         </a>
       </nav>
 
-      <!-- Sidebar Profile -->
       <div class="sidebar-profile-wrapper">
         <a href="profile.html" class="sidebar-profile-card" id="sidebarProfileCard">
           <div class="sidebar-avatar">
@@ -264,7 +251,6 @@
       </header>
       <section class="content">
 
-        <!-- ===== สรุปสถานการณ์รวม ===== -->
         <div class="status-banner" id="statusBanner">
           <div class="status-icon" id="statusIcon"></div>
           <div class="status-text">
@@ -273,7 +259,6 @@
           </div>
         </div>
 
-        <!-- ===== Metric cards ===== -->
         <div class="metrics">
           <article class="metric">
             <div class="label"><span>SOS รอความช่วยเหลือ</span></div>
@@ -297,10 +282,8 @@
           </article>
         </div>
 
-        <!-- ===== Main grid ===== -->
         <div class="dash-grid" style="margin-top:16px;">
 
-          <!-- พยากรณ์อากาศ 7 วัน — เต็มความกว้าง -->
           <section class="panel dash-wide">
             <div class="panel-head">
               <div class="panel-title">
@@ -316,7 +299,6 @@
             </div>
           </section>
 
-          <!-- SOS ล่าสุด — ซ้าย ยืดสองแถว -->
           <section class="panel dash-tall">
             <div class="panel-head">
               <div class="panel-title"><h3>คำร้อง SOS ล่าสุด</h3><p>เรียงตามความเร่งด่วน</p></div>
@@ -327,7 +309,6 @@
             </div>
           </section>
 
-          <!-- GISTDA status — ขวาบน -->
           <section class="panel">
             <div class="panel-head">
               <div class="panel-title"><h3>น้ำท่วมปัจจุบัน</h3><p>ข้อมูลดาวเทียมวันนี้</p></div>
@@ -338,7 +319,6 @@
             </div>
           </section>
 
-          <!-- ศูนย์พักพิง — ขวาล่าง -->
           <section class="panel">
             <div class="panel-head">
               <div class="panel-title"><h3>ศูนย์พักพิง</h3><p>เปิดรับผู้อพยพ</p></div>
@@ -349,7 +329,6 @@
             </div>
           </section>
 
-          <!-- GloFAS River Discharge — เต็มความกว้าง -->
           <section class="panel dash-wide">
             <div class="panel-head">
               <div class="panel-title"><h3>ปริมาณน้ำในแม่น้ำหลัก</h3><p>GloFAS · เทียบค่าเฉลี่ย 30 วัน</p></div>
@@ -396,10 +375,6 @@
       return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
     }
 
-
-    // ==========================================
-    // Dashboard Data Loading
-    // ==========================================
     const GISTDA_KEY = 'FloodInfoKey';
 
     function timeAgo(dateStr) {
@@ -410,7 +385,6 @@
       return Math.floor(diff / 86400) + ' วันที่แล้ว';
     }
 
-    // สถานะรวมจากทุกแหล่งข้อมูล ใช้สรุปแบนเนอร์ด้านบน
     const dashState = { critical: 0, sos: 0, gistda: 0, maxRiverRatio: 0, maxRain: 0 };
 
     async function loadDashboard() {
@@ -480,7 +454,6 @@
       }
     }
 
-    // ---- SOS Posts จาก Supabase ----
     async function loadSOSPosts() {
       const { data: posts } = await sb.from('posts')
         .select('id, caption, severity, status, location_name, latitude, longitude, created_at')
@@ -506,7 +479,6 @@
         return;
       }
 
-      // เรียงลำดับตามความรุนแรงก่อน แล้วจึงเรียงตามเวลาล่าสุด
       const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
       const sorted = [...posts].sort((a, b) => {
         const sa = sevOrder[a.severity] ?? 4, sb = sevOrder[b.severity] ?? 4;
@@ -530,9 +502,8 @@
       }).join('');
     }
 
-    // ---- พยากรณ์อากาศ 7 วัน จาก Open-Meteo ----
     async function loadWeatherForecast() {
-      const lat = 16.43, lng = 102.83; // ขอนแก่น
+      const lat = 16.43, lng = 102.83;
       try {
         const res = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=precipitation_sum,weather_code,temperature_2m_max,temperature_2m_min&forecast_days=7&timezone=Asia%2FBangkok`
@@ -582,7 +553,6 @@
       }
     }
 
-    // ---- GISTDA Flood Status (วันละครั้ง) ----
     async function loadGistdaFlood() {
       const CACHE = 'gistda_dash_cache';
       const TTL = 24 * 60 * 60 * 1000;
@@ -619,8 +589,6 @@
         document.getElementById('gistdaFloodCount').textContent = '—';
       }
     }
-
-    // ---- GloFAS River Discharge ----
 
     async function loadShelterDash() {
       const el = document.getElementById('shelterDashList');
@@ -684,7 +652,6 @@
 
       dashState.maxRiverRatio = Math.max(0, ...results.filter(r => r.current !== null).map(r => r.ratio));
 
-      // เรียงแม่น้ำที่เสี่ยงสูงสุด (ratio มากสุด) ไว้ก่อน ส่วนที่ดึงข้อมูลไม่ได้ไว้ท้ายสุด
       const sorted = [...results].sort((a, b) => {
         if (a.current === null) return 1;
         if (b.current === null) return -1;
