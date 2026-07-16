@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="css/style.css">
   <title>AI Chatbot | FloodSense</title>
   <style>
-    /* ---- Chat layout ---- */
     .chat-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
     .main { display: flex; flex-direction: column; overflow: hidden; }
     .app { height: 100vh; overflow: hidden; }
@@ -24,7 +23,7 @@
       display: flex; flex-direction: column; gap: 16px;
       scroll-behavior: smooth;
     }
-    
+
     .chat-bubble {
       display: flex; gap: 10px; align-items: flex-end; max-width: 72%;
     }
@@ -109,7 +108,7 @@
         </div>
         <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
       </div>
-      
+
       <nav class="nav">
         <p> ภาพรวม </p>
         <a  href="index.html" class="active" title="ภาพรวม">
@@ -128,7 +127,7 @@
         </a>
         <a title="AI Chatbot">
           <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
-          AI ผู้ช่วย
+          AI ผู้ช่วย
         </a>
         <a href="learn.html" title="คู่มือ">
           <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
@@ -258,8 +257,6 @@
       }
     })();
 
-
-    // ---- Chat logic ----
     let userAvatarSrc = '';
 
     function addBubble(text, role, isTyping = false) {
@@ -293,13 +290,11 @@
     const chatInput = document.getElementById('chatInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
 
-    // Auto-resize textarea
     chatInput.addEventListener('input', () => {
       chatInput.style.height = 'auto';
       chatInput.style.height = chatInput.scrollHeight + 'px';
     });
 
-    // Send on Enter (Shift+Enter for newline)
     chatInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
