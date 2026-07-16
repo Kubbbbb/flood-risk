@@ -1,0 +1,1066 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey &libraries=places&language=th&region=TH"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey &libraries=places&language=th&region=TH"></script>
+  <title>ฟีดโพสต์ | FloodSense</title>
+
+  <style>
+    /* ==========================================
+       Feed layout
+       ========================================== */
+    .feed-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .feed-layout { grid-template-columns: 1fr; }
+      .feed-side { display: none; }
+    }
+
+    .feed-main { display: flex; flex-direction: column; gap: 14px; }
+
+
+    /* FAB Composer */
+    .fab-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 200;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--river);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(45,134,191,0.45);
+      transition: background 0.15s, transform 0.15s;
+    }
+    .fab-btn:hover { background: #1a6a9e; transform: scale(1.07); }
+
+    .composer-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 300;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 60px;
+    }
+    .composer-modal-overlay.open { display: flex; }
+    .composer-modal {
+      background: var(--panel);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .composer-modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 0;
+    }
+    .composer-modal-head span { font-size: 0.88rem; font-weight: 700; color: var(--ink); }
+    .composer-close-btn {
+      background: none; border: none; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted);
+    }
+    .composer-close-btn:hover { background: var(--surface); color: var(--ink); }
+    .composer-body { display: flex; gap: 12px; padding: 12px 16px 0; }
+    .composer-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .composer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .composer-input {
+      flex: 1; border: none; resize: none;
+      font-family: inherit; font-size: 1rem;
+      color: var(--ink); background: transparent;
+      min-height: 80px; outline: none;
+      padding-top: 6px;
+    }
+    .composer-input::placeholder { color: var(--muted); }
+    .composer-attachments { padding: 0 16px; }
+    .composer-location-tag {
+      display: none; align-items: center; gap: 6px;
+      font-size: 0.76rem; color: var(--river);
+      background: rgba(45,134,191,0.1);
+      padding: 4px 10px; border-radius: 999px;
+      margin-top: 8px; width: fit-content;
+    }
+    .composer-location-tag.show { display: flex; }
+    .composer-image-preview {
+      display: none; margin-top: 10px; position: relative; max-width: 240px;
+    }
+    .composer-image-preview.show { display: block; }
+    .composer-image-preview img { width: 100%; border-radius: 10px; display: block; }
+    .composer-image-remove {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(0,0,0,0.6); color: #fff; border: none;
+      border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .composer-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px 14px; border-top: 1px solid var(--line); margin-top: 10px;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .composer-tools { display: flex; gap: 4px; align-items: center; }
+    .composer-tool-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
+      border: none; background: transparent; color: var(--river);
+      border-radius: 50%; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .composer-tool-btn:hover { background: rgba(45,134,191,0.1); }
+    .composer-severity-select {
+      border: 1px solid var(--line); background: var(--surface);
+      color: var(--ink); font-size: 0.78rem; font-weight: 600;
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    }
+    .composer-submit-btn {
+      background: var(--river); color: #fff; border: none;
+      font-size: 0.86rem; font-weight: 700;
+      padding: 8px 20px; border-radius: 999px; cursor: pointer;
+    }
+    .composer-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Post card */
+    .post-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+    }
+    .post-head { display: flex; gap: 12px; align-items: flex-start; }
+    .post-avatar-link { flex-shrink: 0; }
+    .post-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: #2d86bf; }
+    .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .post-head-info { flex: 1; min-width: 0; }
+    .post-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .post-display-name { font-weight: 700; font-size: 0.92rem; color: var(--ink); text-decoration: none; }
+    .post-display-name:hover { text-decoration: underline; }
+    .post-username { font-size: 0.82rem; color: var(--muted); text-decoration: none; }
+    .post-time { font-size: 0.78rem; color: var(--muted); }
+    .post-dot { color: var(--muted); font-size: 0.7rem; }
+    .post-badges { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+    .post-badge {
+      font-size: 0.7rem; font-weight: 700;
+      padding: 2px 9px; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .post-badge.sev-low { background: rgba(54,163,103,0.14); color: var(--safe); }
+    .post-badge.sev-medium { background: rgba(214,158,46,0.16); color: var(--watch); }
+    .post-badge.sev-high { background: rgba(217,119,6,0.16); color: #d97706; }
+    .post-badge.sev-critical { background: rgba(220,38,38,0.14); color: var(--danger); }
+    .post-badge.status-open { background: rgba(220,38,38,0.12); color: var(--danger); }
+    .post-badge.status-rescued { background: rgba(54,163,103,0.14); color: var(--safe); }
+    .post-badge.status-closed { background: var(--line); color: var(--muted); }
+
+    .post-body { margin-top: 10px; overflow: hidden; }
+    .post-caption { font-size: 0.92rem; color: var(--ink); line-height: 1.6; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
+    .read-more-link { color: var(--river); font-weight: 600; text-decoration: none; }
+    .read-more-link:hover { text-decoration: underline; }
+    .post-location {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.78rem; color: var(--river); margin-top: 8px;
+    }
+    .post-image-wrap { margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+    .post-image-wrap img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+
+    .post-actions {
+      display: flex; gap: 18px;
+      margin-top: 12px; padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .post-action-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: none;
+      color: var(--muted); font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; padding: 4px 6px; border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .post-action-btn:hover { background: var(--surface); color: var(--ink); }
+    .post-action-btn.liked { color: var(--danger); }
+    .post-action-btn.liked svg { fill: var(--danger); }
+
+    .post-comments { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: none; }
+    .post-comments.open { display: block; }
+    .comment-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .comment-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-bubble { background: var(--surface); border-radius: 10px; padding: 8px 12px; flex: 1; }
+    .comment-author { font-size: 0.78rem; font-weight: 700; color: var(--ink); }
+    .comment-text { font-size: 0.82rem; color: var(--ink); margin-top: 2px; }
+    .comment-form { display: flex; gap: 8px; margin-top: 6px; }
+    .comment-input {
+      flex: 1; border: 1px solid var(--line); border-radius: 999px;
+      padding: 7px 14px; font-size: 0.82rem; font-family: inherit; outline: none;
+    }
+    .comment-submit {
+      background: var(--river); color: #fff; border: none;
+      border-radius: 999px; padding: 7px 16px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* Right sidebar */
+    .feed-side { display: flex; flex-direction: column; gap: 14px; }
+    .side-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .side-panel h4 { margin: 0 0 12px; font-size: 0.92rem; color: var(--ink); }
+    .suggest-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .suggest-row:last-child { margin-bottom: 0; }
+    .suggest-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .suggest-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .suggest-info { flex: 1; min-width: 0; }
+    .suggest-name { font-size: 0.84rem; font-weight: 700; color: var(--ink); text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .suggest-username { font-size: 0.74rem; color: var(--muted); }
+    .suggest-follow-btn {
+      flex-shrink: 0; border: 1px solid var(--river); color: var(--river);
+      background: transparent; font-size: 0.74rem; font-weight: 700;
+      padding: 5px 12px; border-radius: 999px; cursor: pointer;
+    }
+    .suggest-follow-btn.following { background: var(--river); color: #fff; }
+
+    .location-picker-panel {
+      display: none; margin-top: 8px; background: white;
+      border: 1px solid var(--line); border-radius: 10px;
+      overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .location-picker-panel.show { display: block; }
+    .location-picker-row { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    .location-picker-row input { flex: 1; border: none; outline: none; font-family: inherit; font-size: 0.86rem; color: var(--ink); background: transparent; }
+    .location-picker-row button { background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; padding: 2px; }
+    .location-picker-row button:hover { color: var(--ink); }
+    .location-ac-item { display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px; cursor: pointer; font-size: 0.84rem; }
+    .location-ac-item:hover { background: var(--surface); }
+    .location-ac-main { font-weight: 600; color: var(--ink); font-size: 0.84rem; }
+    .location-ac-sub { font-size: 0.74rem; color: var(--muted); margin-top: 1px; }
+    .location-ac-loading { padding: 10px 12px; font-size: 0.8rem; color: var(--muted); }
+
+    .location-picker-panel { display: none; margin-top: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .location-picker-panel.show { display: block; }
+    .location-picker-row { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    .location-picker-row input { flex: 1; border: none; outline: none; font-family: inherit; font-size: 0.86rem; color: var(--ink); background: transparent; }
+    .location-picker-row button { background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; padding: 2px; }
+    .location-picker-row button:hover { color: var(--ink); }
+    .location-ac-item { display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px; cursor: pointer; font-size: 0.84rem; }
+    .location-ac-item:hover { background: var(--surface); }
+    .location-ac-main { font-weight: 600; color: var(--ink); font-size: 0.84rem; }
+    .location-ac-sub { font-size: 0.74rem; color: var(--muted); margin-top: 1px; }
+    .location-ac-loading { padding: 10px 12px; font-size: 0.8rem; color: var(--muted); }
+    .empty-feed { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .loading-feed { text-align: center; padding: 30px; color: var(--muted); font-size: 0.85rem; }
+    .sidebar-profile-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+    .sidebar-profile-card {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar-profile-card:hover { background: rgba(255,255,255,0.12); }
+    .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-display-name { display: block; font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-username-handle { display: block; font-size: 0.72rem; color: #a9c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-dots-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: #a9c8d1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .sidebar-dots-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-profile-menu { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #1a3a4a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; }
+    .sidebar-profile-menu.open { display: block; }
+    .sidebar-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500; color: #e2f2f7; background: transparent; border: none; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-menu-item.danger { color: #f87171; }
+    .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ========================================== Sidebar ========================================== -->
+    <aside class="sidebar" aria-label="เมนูหลัก">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
+      </div>
+
+    
+      <nav class="nav">
+        <p> ภาพรวม </p>
+        <a  href="index.html" class="active" title="ภาพรวม">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </a>
+        <a title="ฟีด"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg> Community</a>
+        <a href="map.html" title="แผนที่">
+          <svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>
+          Map
+        </a>
+       <p> ความช่วยเหลือ </p>
+        <a href="shelters.html" title="ศูนย์พักพิง">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+          ศูนย์พักพิง
+        </a>
+        <a href="chat.html" title="AI Chatbot">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
+          AI ผู้ช่วย
+        </a>
+        <a href="learn.html" title="คู่มือ">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
+          คู่มือ
+        </a>
+      </nav>
+
+      <div class="sidebar-profile-wrapper">
+        <a href="profile.html" class="sidebar-profile-card" id="sidebarProfileCard">
+          <div class="sidebar-avatar">
+            <img id="sidebarAvatarImg" src="" alt="รูปโปรไฟล์">
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-display-name" id="sidebarDisplayName"></span>
+            <span class="sidebar-username-handle" id="sidebarUsernameHandle"></span>
+          </div>
+        </a>
+        <button class="sidebar-dots-btn" onclick="toggleProfileMenu(event)" title="ตัวเลือก">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+        <div class="sidebar-profile-menu" id="sidebarProfileMenu">
+          <a href="profile.html" class="sidebar-menu-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            โปรไฟล์
+          </a>
+          <button class="sidebar-menu-item danger" onclick="signOut()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================== Main ========================================== -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>ฟีดชุมชน</h2>
+          <p>โพสต์ขอความช่วยเหลือและอัปเดตสถานการณ์น้ำท่วมจากผู้ใช้ในพื้นที่</p>
+        </div>
+        <div class="top-actions">
+          <button class="sos-btn" id="openSos">
+            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="feed-layout">
+
+          <!-- ====== Feed main column ====== -->
+          <div class="feed-main">
+            <!-- Feed list -->
+            <div id="feedList">
+              <div class="loading-feed">กำลังโหลดฟีด...</div>
+            </div>
+          </div>
+
+          <!-- ====== Right sidebar ====== -->
+          <aside class="feed-side">
+            <div class="side-panel">
+              <h4>แนะนำให้ติดตาม</h4>
+              <div id="suggestedUsers">
+                <div class="loading-feed" style="padding:10px 0;">กำลังโหลด...</div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+
+  <!-- FAB -->
+  <button class="fab-btn" id="fabBtn" title="โพสต์ใหม่">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </button>
+
+  <!-- Composer Modal -->
+  <div class="composer-modal-overlay" id="composerOverlay">
+    <div class="composer-modal">
+      <div class="composer-modal-head">
+        <span>โพสต์ใหม่</span>
+        <button class="composer-close-btn" id="composerCloseBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <form id="composerForm">
+        <div class="composer-body">
+          <div class="composer-avatar"><img id="composerAvatarImg" src="" alt=""></div>
+          <textarea class="composer-input" id="composerText" placeholder="แจ้งสถานการณ์น้ำท่วมหรือขอความช่วยเหลือ..."></textarea>
+        </div>
+        <div class="composer-attachments">
+          <div class="location-picker-panel" id="locationPickerPanel">
+            <div class="location-picker-row">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2d86bf" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <input type="text" id="locationSearchInput" placeholder="ค้นหาสถานที่..." autocomplete="off">
+              <button type="button" id="locationGpsBtn" title="ใช้ตำแหน่งปัจจุบัน">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>
+              </button>
+              <button type="button" id="locationPickerClose">✕</button>
+            </div>
+            <div id="locationAcDropdown"></div>
+          </div>
+          <div class="composer-location-tag" id="composerLocationTag">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span id="composerLocationText" style="cursor:pointer;" onclick="document.getElementById('locationPickerPanel').classList.add('show');document.getElementById('locationSearchInput').focus();">ตำแหน่ง</span>
+            <button type="button" id="composerLocationRemove" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;display:flex;">✕</button>
+          </div>
+          <div class="composer-image-preview" id="composerImagePreview">
+            <img id="composerImagePreviewImg" src="" alt="">
+            <button type="button" class="composer-image-remove" id="composerImageRemove">✕</button>
+          </div>
+        </div>
+        <div class="composer-footer">
+          <div class="composer-tools">
+            <input type="file" id="composerFileInput" accept="image/*" style="display:none;">
+            <button type="button" class="composer-tool-btn" id="composerAddImageBtn" title="รูปภาพ">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+            </button>
+            <button type="button" class="composer-tool-btn" id="composerAddLocationBtn" title="ตำแหน่ง">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </button>
+            <select class="composer-severity-select" id="composerSeverity">
+              <option value="">ระดับความรุนแรง</option>
+              <option value="low">ต่ำ</option>
+              <option value="medium">ปานกลาง</option>
+              <option value="high">สูง</option>
+              <option value="critical">วิกฤต</option>
+            </select>
+          </div>
+          <button type="submit" class="composer-submit-btn" id="composerSubmitBtn" disabled>โพสต์</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SOS Modal -->
+  <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h3 id="sosTitle">ส่งคำร้องขอความช่วยเหลือ SOS</h3>
+        <button class="icon-btn" id="closeSos" title="ปิด"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+      <form class="dialog-body" id="sosForm">
+        <div class="field"><label for="sosName">ชื่อผู้แจ้ง</label><input id="sosName" required placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field"><label for="sosLocation">ตำแหน่งหรือพิกัด</label><input id="sosLocation" required value="โซน C ซอยริมคลอง 4"></div>
+        <div class="field"><label for="sosDetail">รายละเอียดเหตุฉุกเฉิน</label><textarea id="sosDetail" required placeholder="จำนวนผู้ประสบภัย ระดับน้ำ ความเร่งด่วน"></textarea></div>
+        <button class="sos-btn" type="submit">ส่งพิกัดให้หน่วยกู้ภัย</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/bundle.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'DatabaseLink',
+      'DatabaseKey'
+    );
+
+    let currentUser = null;
+    let currentProfile = null;
+    let pendingImageFile = null;
+    let pendingLocation = null; // { lat, lng }
+
+    function makeInitialsAvatar(text) {
+      const initial = (text || '?').charAt(0).toUpperCase();
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+
+    function avatarUrlFor(profile) {
+      if (profile?.avatar_url) {
+        const { data } = sb.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        if (data?.publicUrl) return data.publicUrl;
+      }
+      return makeInitialsAvatar(profile?.username || profile?.display_name || '?');
+    }
+
+    function timeAgo(dateStr) {
+      const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+      if (diff < 60) return 'เมื่อสักครู่';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชม.ที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function severityLabel(sev) {
+      return { low: 'ความเสี่ยงต่ำ', medium: 'ปานกลาง', high: 'สูง', critical: 'วิกฤต' }[sev] || '';
+    }
+    function statusLabel(st) {
+      return { open: 'รอช่วยเหลือ', rescued: 'ช่วยเหลือแล้ว', closed: 'ปิดเคส' }[st] || '';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ==========================================
+    // Init
+    // ==========================================
+    async function initPage() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'auth.html'; return; }
+      currentUser = session.user;
+
+      const { data: profile } = await sb.from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      currentProfile = profile;
+      const emailPrefix = currentUser.email.split('@')[0];
+      const displayName = profile?.display_name || emailPrefix;
+      const username = profile?.username || emailPrefix;
+
+      document.getElementById('sidebarDisplayName').textContent = displayName;
+      document.getElementById('sidebarUsernameHandle').textContent = '@' + username;
+      const avUrl = avatarUrlFor(profile || { username });
+      document.getElementById('sidebarAvatarImg').src = avUrl;
+      document.getElementById('composerAvatarImg').src = avUrl;
+
+      loadFeed();
+      loadSuggestedUsers();
+    }
+
+    // ==========================================
+    // Composer behavior
+    // ==========================================
+    const composerText = document.getElementById('composerText');
+    const composerSubmitBtn = document.getElementById('composerSubmitBtn');
+
+    function updateSubmitState() {
+      composerSubmitBtn.disabled = !composerText.value.trim() && !pendingImageFile;
+    }
+    composerText.addEventListener('input', updateSubmitState);
+
+    document.getElementById('composerAddImageBtn').addEventListener('click', () => {
+      document.getElementById('composerFileInput').click();
+    });
+
+    document.getElementById('composerFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      pendingImageFile = file;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        document.getElementById('composerImagePreviewImg').src = ev.target.result;
+        document.getElementById('composerImagePreview').classList.add('show');
+        updateSubmitState();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('composerImageRemove').addEventListener('click', () => {
+      pendingImageFile = null;
+      document.getElementById('composerFileInput').value = '';
+      document.getElementById('composerImagePreview').classList.remove('show');
+      updateSubmitState();
+    });
+
+    // ---- Location Picker ----
+    let acSvc, acToken;
+
+    function setLocation(lat, lng, name) {
+      pendingLocation = { lat, lng, name: name || null };
+      document.getElementById('composerLocationText').textContent = name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      document.getElementById('composerLocationTag').classList.add('show');
+      document.getElementById('locationPickerPanel').classList.remove('show');
+    }
+
+    document.getElementById('composerAddLocationBtn').addEventListener('click', () => {
+      document.getElementById('locationPickerPanel').classList.toggle('show');
+      if (document.getElementById('locationPickerPanel').classList.contains('show')) {
+        document.getElementById('locationSearchInput').focus();
+      }
+    });
+
+    document.getElementById('locationPickerClose').addEventListener('click', () => {
+      document.getElementById('locationPickerPanel').classList.remove('show');
+    });
+
+    document.getElementById('locationGpsBtn').addEventListener('click', () => {
+      if (!navigator.geolocation) { showToast('เบราว์เซอร์ไม่รองรับ Geolocation'); return; }
+      document.getElementById('locationGpsBtn').style.opacity = '0.4';
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=GoogleMapsKey &language=th`)
+          .then(r => r.json()).then(data => {
+            const comp = data.results?.[0]?.address_components || [];
+            const sub = comp.find(x => x.types.includes('sublocality_level_1') || x.types.includes('sublocality'));
+            const district = comp.find(x => x.types.includes('administrative_area_level_2'));
+            const province = comp.find(x => x.types.includes('administrative_area_level_1'));
+            const name = [sub?.long_name, district?.long_name, province?.long_name].filter(Boolean).join(' ');
+            setLocation(lat, lng, name);
+          }).catch(() => setLocation(lat, lng, null));
+        document.getElementById('locationGpsBtn').style.opacity = '';
+      }, () => {
+        showToast('เข้าถึงตำแหน่งไม่ได้ กรุณาอนุญาต');
+        document.getElementById('locationGpsBtn').style.opacity = '';
+      });
+    });
+
+    let locDebounce;
+    document.getElementById('locationSearchInput').addEventListener('input', (e) => {
+      clearTimeout(locDebounce);
+      const val = e.target.value.trim();
+      const dd = document.getElementById('locationAcDropdown');
+      if (val.length < 2) { dd.innerHTML = ''; return; }
+      dd.innerHTML = '<div class="location-ac-loading">กำลังค้นหา...</div>';
+      locDebounce = setTimeout(() => {
+        if (!window.google) { dd.innerHTML = ''; return; }
+        if (!acSvc) acSvc = new google.maps.places.AutocompleteService();
+        if (!acToken) acToken = new google.maps.places.AutocompleteSessionToken();
+        acSvc.getPlacePredictions({ input: val, sessionToken: acToken, componentRestrictions: { country: 'TH' }, language: 'th' }, (preds, status) => {
+          dd.innerHTML = '';
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+            dd.innerHTML = '<div class="location-ac-loading">ไม่พบสถานที่</div>';
+            return;
+          }
+          preds.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'location-ac-item';
+            item.innerHTML = `
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#66717d" stroke-width="2" style="flex-shrink:0;margin-top:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path></svg>
+              <div>
+                <div class="location-ac-main">${p.structured_formatting.main_text}</div>
+                <div class="location-ac-sub">${p.structured_formatting.secondary_text || ''}</div>
+              </div>`;
+            item.addEventListener('mousedown', (ev) => {
+              ev.preventDefault();
+              const div = document.createElement('div');
+              new google.maps.places.PlacesService(div).getDetails(
+                { placeId: p.place_id, fields: ['geometry','name'], sessionToken: acToken },
+                (place, st) => {
+                  if (st === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                    setLocation(place.geometry.location.lat(), place.geometry.location.lng(), place.name || p.structured_formatting.main_text);
+                    acToken = new google.maps.places.AutocompleteSessionToken();
+                  }
+                }
+              );
+              document.getElementById('locationSearchInput').value = '';
+              dd.innerHTML = '';
+            });
+            dd.appendChild(item);
+          });
+        });
+      }, 300);
+    });
+
+    document.getElementById('composerLocationRemove').addEventListener('click', () => {
+      pendingLocation = null;
+      document.getElementById('composerLocationTag').classList.remove('show');
+    });
+
+    document.getElementById('composerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const caption = composerText.value.trim();
+      const severity = document.getElementById('composerSeverity').value || null;
+
+      composerSubmitBtn.disabled = true;
+      composerSubmitBtn.textContent = 'กำลังโพสต์...';
+
+      const insertData = {
+        user_id: currentUser.id,
+        caption: caption || null,
+        severity,
+        status: 'open'
+      };
+      if (pendingLocation) {
+        insertData.latitude = pendingLocation.lat;
+        insertData.longitude = pendingLocation.lng;
+      }
+
+      const { data: newPost, error } = await sb.from('posts')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        showToast('โพสต์ไม่สำเร็จ: ' + error.message);
+        composerSubmitBtn.disabled = false;
+        composerSubmitBtn.textContent = 'โพสต์';
+        return;
+      }
+
+      if (pendingImageFile) {
+        const ext = pendingImageFile.name.split('.').pop();
+        const path = `${currentUser.id}/${newPost.id}.${ext}`;
+        const { error: upErr } = await sb.storage.from('post-images').upload(path, pendingImageFile);
+        if (!upErr) {
+          await sb.from('post_images').insert({ post_id: newPost.id, url: path, order_index: 0 });
+        }
+      }
+
+      // reset composer
+      composerText.value = '';
+      pendingImageFile = null;
+      pendingLocation = null;
+      document.getElementById('composerFileInput').value = '';
+      document.getElementById('composerImagePreview').classList.remove('show');
+      document.getElementById('composerLocationTag').classList.remove('show');
+      document.getElementById('composerSeverity').value = '';
+      composerSubmitBtn.textContent = 'โพสต์';
+      updateSubmitState();
+
+      showToast('โพสต์สำเร็จ');
+      document.getElementById('composerOverlay').classList.remove('open');
+      loadFeed();
+    });
+
+    // ==========================================
+    // Load feed
+    // ==========================================
+    async function loadFeed() {
+      const feedList = document.getElementById('feedList');
+
+      const { data: posts, error } = await sb.from('posts')
+        .select(`
+          id, caption, latitude, longitude, location_name, severity, status, created_at, user_id,
+          profiles!posts_user_id_fkey ( username, display_name, avatar_url ),
+          post_images ( url, order_index ),
+          likes ( user_id ),
+          comments ( id )
+        `)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (error) {
+        feedList.innerHTML = `<div class="empty-feed">โหลดฟีดไม่สำเร็จ: ${error.message}</div>`;
+        return;
+      }
+
+      if (!posts || posts.length === 0) {
+        feedList.innerHTML = `<div class="empty-feed">ยังไม่มีโพสต์ในตอนนี้ เป็นคนแรกที่แจ้งสถานการณ์</div>`;
+        return;
+      }
+
+      feedList.innerHTML = '';
+      posts.forEach(post => feedList.appendChild(renderPostCard(post)));
+    }
+
+    function renderPostCard(post) {
+      const profile = post['profiles!posts_user_id_fkey'] || post.profiles || {};
+      const username = profile.username || 'ผู้ใช้';
+      const displayName = profile.display_name || username;
+      const avUrl = avatarUrlFor(profile);
+      const liked = (post.likes || []).some(l => l.user_id === currentUser.id);
+      const likeCount = (post.likes || []).length;
+      const commentCount = (post.comments || []).length;
+      const img = (post.post_images || []).sort((a,b) => a.order_index - b.order_index)[0];
+
+      const wrap = document.createElement('article');
+      wrap.className = 'post-card';
+      wrap.dataset.postId = post.id;
+
+      let badgesHtml = '';
+      if (post.severity) badgesHtml += `<span class="post-badge sev-${post.severity}">${severityLabel(post.severity)}</span>`;
+      if (post.status) badgesHtml += `<span class="post-badge status-${post.status}">${statusLabel(post.status)}</span>`;
+
+      let imgHtml = '';
+      if (img) {
+        const { data } = sb.storage.from('post-images').getPublicUrl(img.url);
+        imgHtml = `<div class="post-image-wrap"><img src="${data.publicUrl}" alt="รูปภาพโพสต์" loading="lazy"></div>`;
+      }
+
+      let locHtml = '';
+      if (post.latitude && post.longitude) {
+        const coordText = `${Number(post.latitude).toFixed(4)}, ${Number(post.longitude).toFixed(4)}`;
+        const locText = post.location_name || coordText;
+        const locId = `loc-${post.id}`;
+        locHtml = `<a href="map.html?lat=${post.latitude}&lng=${post.longitude}&zoom=14" class="post-location" style="text-decoration:none;" title="ดูบนแผนที่" id="${locId}">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="loc-label-${post.id}">${locText}</span>
+        </a>`;
+        if (!post.location_name) {
+          fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${post.latitude},${post.longitude}&key=GoogleMapsKey &language=th`)
+            .then(r => r.json()).then(data => {
+              if (!data.results?.[0]) return;
+              const comp = data.results[0].address_components;
+              const sub      = comp.find(x => x.types.includes('sublocality_level_1') || x.types.includes('sublocality'));
+              const district = comp.find(x => x.types.includes('administrative_area_level_2'));
+              const province = comp.find(x => x.types.includes('administrative_area_level_1'));
+              const name = [sub?.long_name, district?.long_name, province?.long_name].filter(Boolean).join(' ');
+              if (name) document.querySelectorAll(`.loc-label-${post.id}`).forEach(el => el.textContent = name);
+            }).catch(() => {});
+        }
+      }
+
+      const CAPTION_LIMIT = 220;
+      let captionHtml = '';
+      if (post.caption) {
+        if (post.caption.length > CAPTION_LIMIT) {
+          const truncated = post.caption.slice(0, CAPTION_LIMIT);
+          captionHtml = `<div class="post-caption">${escapeHtml(truncated)}... <a href="post.html?id=${post.id}" class="read-more-link">เพิ่มเติม</a></div>`;
+        } else {
+          captionHtml = `<div class="post-caption">${escapeHtml(post.caption)}</div>`;
+        }
+      }
+
+      wrap.innerHTML = `
+        <div class="post-head">
+          <a href="user.html?id=${post.user_id}" class="post-avatar-link">
+            <div class="post-avatar"><img src="${avUrl}" alt=""></div>
+          </a>
+          <div class="post-head-info">
+            <div class="post-name-row">
+              <a href="user.html?id=${post.user_id}" class="post-display-name">${escapeHtml(displayName)}</a>
+              <a href="user.html?id=${post.user_id}" class="post-username">@${escapeHtml(username)}</a>
+              <span class="post-dot">·</span>
+              <span class="post-time">${timeAgo(post.created_at)}</span>
+            </div>
+            ${badgesHtml ? `<div class="post-badges">${badgesHtml}</div>` : ''}
+          </div>
+        </div>
+        <div class="post-body post-body-clickable">
+          ${captionHtml}
+          ${locHtml}
+          ${imgHtml}
+        </div>
+        <div class="post-actions">
+          <button class="post-action-btn like-btn ${liked ? 'liked' : ''}" data-post-id="${post.id}">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg>
+            <span class="like-count">${likeCount}</span>
+          </button>
+          <button class="post-action-btn comment-toggle-btn" data-post-id="${post.id}">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg>
+            <span class="comment-count">${commentCount}</span>
+          </button>
+        </div>
+        <div class="post-comments" id="comments-${post.id}">
+          <div class="comments-list"></div>
+          <form class="comment-form">
+            <input class="comment-input" placeholder="แสดงความคิดเห็น...">
+            <button type="submit" class="comment-submit">ส่ง</button>
+          </form>
+        </div>
+      `;
+
+      wrap.querySelector('.like-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleLike(post.id, wrap); });
+      wrap.querySelector('.comment-toggle-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleComments(post.id, wrap); });
+      wrap.querySelector('.comment-form').addEventListener('submit', (e) => { e.stopPropagation(); submitComment(e, post.id, wrap); });
+      wrap.querySelector('.post-body-clickable').addEventListener('click', (e) => {
+        if (e.target.closest('a')) return; // ปล่อยให้ลิงก์ทำงานปกติ
+        window.location.href = `post.html?id=${post.id}`;
+      });
+      wrap.querySelector('.post-body-clickable').style.cursor = 'pointer';
+
+      return wrap;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ==========================================
+    // Like toggle
+    // ==========================================
+    async function toggleLike(postId, cardEl) {
+      const btn = cardEl.querySelector('.like-btn');
+      const countEl = btn.querySelector('.like-count');
+      const isLiked = btn.classList.contains('liked');
+
+      if (isLiked) {
+        await sb.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', postId);
+        btn.classList.remove('liked');
+        btn.querySelector('svg').setAttribute('fill', 'none');
+        countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+      } else {
+        await sb.from('likes').insert({ user_id: currentUser.id, post_id: postId });
+        btn.classList.add('liked');
+        btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        countEl.textContent = parseInt(countEl.textContent) + 1;
+      }
+    }
+
+    // ==========================================
+    // Comments
+    // ==========================================
+    async function toggleComments(postId, cardEl) {
+      const panel = cardEl.querySelector(`#comments-${postId}`);
+      const wasOpen = panel.classList.contains('open');
+      panel.classList.toggle('open');
+      if (!wasOpen) await loadComments(postId, panel);
+    }
+
+    async function loadComments(postId, panel) {
+      const list = panel.querySelector('.comments-list');
+      list.innerHTML = '<div class="loading-feed" style="padding:6px 0;">กำลังโหลด...</div>';
+
+      const { data: comments } = await sb.from('comments')
+        .select('id, body, created_at, profiles!comments_user_id_fkey ( username, display_name, avatar_url )')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (!comments || comments.length === 0) {
+        list.innerHTML = '<div style="font-size:0.8rem;color:var(--muted);padding:4px 0;">ยังไม่มีความคิดเห็น</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      comments.forEach(c => {
+        const p = c['profiles!comments_user_id_fkey'] || c.profiles || {};
+        const row = document.createElement('div');
+        row.className = 'comment-row';
+        row.innerHTML = `
+          <div class="comment-avatar"><img src="${avatarUrlFor(p)}" alt=""></div>
+          <div class="comment-bubble">
+            <div class="comment-author">${escapeHtml(p.display_name || p.username || 'ผู้ใช้')}</div>
+            <div class="comment-text">${escapeHtml(c.body)}</div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    async function submitComment(e, postId, cardEl) {
+      e.preventDefault();
+      const input = e.target.querySelector('.comment-input');
+      const body = input.value.trim();
+      if (!body) return;
+
+      const { error } = await sb.from('comments').insert({
+        post_id: postId, user_id: currentUser.id, body
+      });
+
+      if (error) { showToast('ส่งความคิดเห็นไม่สำเร็จ'); return; }
+
+      input.value = '';
+      const countEl = cardEl.querySelector('.comment-count');
+      countEl.textContent = parseInt(countEl.textContent) + 1;
+      const panel = cardEl.querySelector(`#comments-${postId}`);
+      await loadComments(postId, panel);
+    }
+
+    // ==========================================
+    // Suggested users
+    // ==========================================
+    async function loadSuggestedUsers() {
+      const container = document.getElementById('suggestedUsers');
+
+      const { data: alreadyFollowing } = await sb.from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.id);
+      const followingIds = new Set((alreadyFollowing || []).map(f => f.following_id));
+
+      const { data: users, error } = await sb.from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .neq('id', currentUser.id)
+        .limit(20);
+
+      if (error || !users || users.length === 0) {
+        container.innerHTML = '<div style="font-size:0.8rem;color:var(--muted);">ยังไม่มีผู้ใช้แนะนำ</div>';
+        return;
+      }
+
+      const filtered = users.filter(u => !followingIds.has(u.id)).slice(0, 5);
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="font-size:0.8rem;color:var(--muted);">คุณติดตามทุกคนแล้ว</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'suggest-row';
+        row.innerHTML = `
+          <a href="user.html?id=${u.id}" class="suggest-avatar"><img src="${avatarUrlFor(u)}" alt=""></a>
+          <div class="suggest-info">
+            <a href="user.html?id=${u.id}" class="suggest-name">${escapeHtml(u.display_name || u.username)}</a>
+            <span class="suggest-username">@${escapeHtml(u.username)}</span>
+          </div>
+          <button class="suggest-follow-btn" data-user-id="${u.id}">ติดตาม</button>
+        `;
+        row.querySelector('.suggest-follow-btn').addEventListener('click', async (e) => {
+          const btn = e.currentTarget;
+          await sb.from('follows').insert({ follower_id: currentUser.id, following_id: u.id });
+          btn.textContent = 'ติดตามแล้ว';
+          btn.classList.add('following');
+          btn.disabled = true;
+        });
+        container.appendChild(row);
+      });
+    }
+
+    // ==========================================
+    // Sidebar dropdown + signOut
+    // ==========================================
+    function toggleProfileMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('sidebarProfileMenu').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+      document.getElementById('sidebarProfileMenu')?.classList.remove('open');
+    });
+    async function signOut() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+
+    // FAB open/close
+    document.getElementById('fabBtn').addEventListener('click', () => {
+      document.getElementById('composerOverlay').classList.add('open');
+      document.getElementById('composerText').focus();
+    });
+    document.getElementById('composerCloseBtn').addEventListener('click', () => {
+      document.getElementById('composerOverlay').classList.remove('open');
+    });
+    document.getElementById('composerOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('composerOverlay'))
+        document.getElementById('composerOverlay').classList.remove('open');
+    });
+
+    initPage();
+  </script>
+</body>
+</html>

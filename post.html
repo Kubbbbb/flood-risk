@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>โพสต์ | FloodSense</title>
+
+  <style>
+    .back-row { margin-bottom: 14px; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--muted); font-size: 0.85rem; font-weight: 600;
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--ink); }
+
+    .post-card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+      padding: 20px; box-shadow: var(--shadow); position: relative;
+    }
+    .post-head { display: flex; gap: 12px; align-items: flex-start; }
+    .post-avatar-link { flex-shrink: 0; }
+    .post-avatar { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; background: #2d86bf; }
+    .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .post-head-info { flex: 1; min-width: 0; }
+    .post-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .post-display-name { font-weight: 700; font-size: 0.98rem; color: var(--ink); text-decoration: none; }
+    .post-display-name:hover { text-decoration: underline; }
+    .post-username { font-size: 0.84rem; color: var(--muted); text-decoration: none; }
+    .post-time { font-size: 0.8rem; color: var(--muted); }
+    .post-dot { color: var(--muted); font-size: 0.7rem; }
+    .post-badges { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+    .post-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .post-badge.sev-low { background: rgba(54,163,103,0.14); color: var(--safe); }
+    .post-badge.sev-medium { background: rgba(214,158,46,0.16); color: var(--watch); }
+    .post-badge.sev-high { background: rgba(217,119,6,0.16); color: #d97706; }
+    .post-badge.sev-critical { background: rgba(220,38,38,0.14); color: var(--danger); }
+    .post-badge.status-open { background: rgba(220,38,38,0.12); color: var(--danger); }
+    .post-badge.status-rescued { background: rgba(54,163,103,0.14); color: var(--safe); }
+    .post-badge.status-closed { background: var(--line); color: var(--muted); }
+
+    .post-dots-btn {
+      flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+      background: transparent; border: none; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .post-dots-btn:hover { background: var(--surface); color: var(--ink); }
+    .post-options-menu {
+      display: none; position: absolute; top: 56px; right: 20px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+      padding: 6px; min-width: 150px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 50;
+    }
+    .post-options-menu.open { display: block; }
+    .post-options-item {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500;
+      color: var(--ink); background: transparent; border: none; cursor: pointer;
+      text-align: left; transition: background 0.15s;
+    }
+    .post-options-item:hover { background: var(--surface); }
+    .post-options-item.danger { color: var(--danger); }
+    .post-options-item.danger:hover { background: rgba(220,38,38,0.08); }
+
+    .post-body { margin-top: 14px; overflow: hidden; }
+    .post-caption { font-size: 1rem; color: var(--ink); line-height: 1.7; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
+    .post-location { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--river); margin-top: 10px; }
+    .post-image-wrap { margin-top: 12px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+    .post-image-wrap img { width: 100%; max-height: 500px; object-fit: cover; display: block; }
+
+    .post-actions { display: flex; gap: 20px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .post-action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--muted); font-size: 0.86rem; font-weight: 600; cursor: pointer; padding: 5px 8px; border-radius: 6px; }
+    .post-action-btn:hover { background: var(--surface); color: var(--ink); }
+    .post-action-btn.liked { color: var(--danger); }
+
+    /* Edit mode */
+    .post-edit-form { margin-top: 14px; display: none; flex-direction: column; gap: 10px; }
+    .post-edit-form.open { display: flex; }
+    .post-edit-form textarea {
+      width: 100%; min-height: 90px; border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; font-family: inherit; font-size: 0.92rem; color: var(--ink); resize: vertical;
+    }
+    .post-edit-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .post-edit-select {
+      border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px;
+      font-size: 0.82rem; color: var(--ink); background: var(--surface);
+    }
+    .post-edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    .post-edit-save { background: var(--river); color: #fff; border: none; border-radius: 8px; padding: 7px 18px; font-size: 0.84rem; font-weight: 700; cursor: pointer; }
+    .post-edit-cancel { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 18px; font-size: 0.84rem; font-weight: 600; cursor: pointer; }
+
+    /* Comments section */
+    .comments-section { margin-top: 18px; }
+    .comments-title { font-size: 0.92rem; font-weight: 700; color: var(--ink); margin: 0 0 12px; }
+    .comment-row { display: flex; gap: 10px; margin-bottom: 14px; }
+    .comment-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-content { flex: 1; min-width: 0; }
+    .comment-bubble { background: var(--surface); border-radius: 12px; padding: 9px 14px; }
+    .comment-author-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .comment-author { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+    .comment-text { font-size: 0.86rem; color: var(--ink); margin-top: 2px; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
+    .comment-image { margin-top: 8px; border-radius: 8px; overflow: hidden; max-width: 220px; border: 1px solid var(--line); }
+    .comment-image img { width: 100%; display: block; }
+    .comment-location { display: flex; align-items: center; gap: 4px; font-size: 0.74rem; color: var(--river); margin-top: 6px; }
+    .comment-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; padding-left: 4px; }
+    .comment-time { font-size: 0.74rem; color: var(--muted); }
+
+    .comment-form-wrap { margin-top: 14px; }
+    .comment-form { display: flex; gap: 10px; align-items: flex-start; }
+    .comment-form-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .comment-form-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-form-main { flex: 1; }
+    .comment-input {
+      width: 100%; border: 1px solid var(--line); border-radius: 10px;
+      padding: 9px 14px; font-size: 0.86rem; font-family: inherit; outline: none; resize: none;
+    }
+    .comment-tools-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 8px; }
+    .comment-tools { display: flex; gap: 6px; }
+    .comment-tool-btn {
+      display: flex; align-items: center; gap: 5px;
+      border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+      font-size: 0.74rem; font-weight: 600; padding: 5px 9px; border-radius: 7px; cursor: pointer;
+    }
+    .comment-tool-btn:hover { background: var(--line); color: var(--ink); }
+    .comment-submit-btn {
+      background: var(--river); color: #fff; border: none; border-radius: 999px;
+      padding: 7px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    }
+    .comment-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .comment-location-tag {
+      display: none; align-items: center; gap: 5px; font-size: 0.74rem; color: var(--river);
+      background: rgba(45,134,191,0.1); padding: 3px 9px; border-radius: 999px; margin-top: 6px; width: fit-content;
+    }
+    .comment-location-tag.show { display: flex; }
+    .comment-image-preview { display: none; margin-top: 8px; position: relative; max-width: 160px; }
+    .comment-image-preview.show { display: block; }
+    .comment-image-preview img { width: 100%; border-radius: 8px; display: block; }
+    .comment-image-remove {
+      position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: #fff;
+      border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    .loading-feed { text-align: center; padding: 30px; color: var(--muted); font-size: 0.85rem; }
+    .empty-feed { text-align: center; padding: 30px; color: var(--muted); }
+
+    .sidebar-profile-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+    .sidebar-profile-card {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar-profile-card:hover { background: rgba(255,255,255,0.12); }
+    .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-display-name { display: block; font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-username-handle { display: block; font-size: 0.72rem; color: #a9c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-dots-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: #a9c8d1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .sidebar-dots-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-profile-menu { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #1a3a4a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; }
+    .sidebar-profile-menu.open { display: block; }
+    .sidebar-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500; color: #e2f2f7; background: transparent; border: none; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-menu-item.danger { color: #f87171; }
+    .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ========================================== Sidebar ========================================== -->
+    <aside class="sidebar" aria-label="เมนูหลัก">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
+      </div>
+
+      <nav class="nav">
+        <p> ภาพรวม </p>
+        <a href="index.html" class="active" title="ภาพรวม">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </a>
+        <a href="feed.html" title="ฟีด"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg> Community</a>
+        <a href="map.html" title="แผนที่">
+          <svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>
+          Map
+        </a>
+       <p> ความช่วยเหลือ </p>
+        <a href="shelters.html" title="ศูนย์พักพิง">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+          ศูนย์พักพิง
+        </a>
+        <a href="chat.html" title="AI Chatbot">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
+          AI ผู้ช่วย
+        </a>
+        <a href="learn.html" title="คู่มือ">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
+          คู่มือ
+        </a>
+      </nav>
+
+      <div class="sidebar-profile-wrapper">
+        <a href="profile.html" class="sidebar-profile-card" id="sidebarProfileCard">
+          <div class="sidebar-avatar">
+            <img id="sidebarAvatarImg" src="" alt="รูปโปรไฟล์">
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-display-name" id="sidebarDisplayName"></span>
+            <span class="sidebar-username-handle" id="sidebarUsernameHandle"></span>
+          </div>
+        </a>
+        <button class="sidebar-dots-btn" onclick="toggleProfileMenu(event)" title="ตัวเลือก">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+        <div class="sidebar-profile-menu" id="sidebarProfileMenu">
+          <a href="profile.html" class="sidebar-menu-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            โปรไฟล์
+          </a>
+          <button class="sidebar-menu-item danger" onclick="signOut()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================== Main ========================================== -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>รายละเอียดโพสต์</h2>
+          <p>ดูข้อมูลฉบับเต็มและความคิดเห็นทั้งหมด</p>
+        </div>
+        <div class="top-actions">
+          <button class="sos-btn" id="openSos">
+            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="back-row">
+          <a href="feed.html" class="back-link">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+            กลับไปที่ฟีด
+          </a>
+        </div>
+        <div id="postRoot">
+          <div class="loading-feed">กำลังโหลดโพสต์...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h3 id="sosTitle">ส่งคำร้องขอความช่วยเหลือ SOS</h3>
+        <button class="icon-btn" id="closeSos" title="ปิด"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+      <form class="dialog-body" id="sosForm">
+        <div class="field"><label for="sosName">ชื่อผู้แจ้ง</label><input id="sosName" required placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field"><label for="sosLocation">ตำแหน่งหรือพิกัด</label><input id="sosLocation" required value="โซน C ซอยริมคลอง 4"></div>
+        <div class="field"><label for="sosDetail">รายละเอียดเหตุฉุกเฉิน</label><textarea id="sosDetail" required placeholder="จำนวนผู้ประสบภัย ระดับน้ำ ความเร่งด่วน"></textarea></div>
+        <button class="sos-btn" type="submit">ส่งพิกัดให้หน่วยกู้ภัย</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/bundle.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'DatabaseLink',
+      'DatabaseKey'
+    );
+
+    let currentUser = null;
+    let currentPost = null;
+    let myProfileCache = null;
+    let pendingCommentImageFile = null;
+    let pendingCommentLocation = null;
+    const postId = new URLSearchParams(window.location.search).get('id');
+
+    function makeInitialsAvatar(text) {
+      const initial = (text || '?').charAt(0).toUpperCase();
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+    function avatarUrlFor(profile) {
+      if (profile?.avatar_url) {
+        const { data } = sb.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        if (data?.publicUrl) return data.publicUrl;
+      }
+      return makeInitialsAvatar(profile?.username || profile?.display_name || '?');
+    }
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+    function timeAgo(dateStr) {
+      const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+      if (diff < 60) return 'เมื่อสักครู่';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชม.ที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function exactTime(dateStr) {
+      return new Date(dateStr).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    function severityLabel(sev) { return { low: 'ความเสี่ยงต่ำ', medium: 'ปานกลาง', high: 'สูง', critical: 'วิกฤต' }[sev] || ''; }
+    function statusLabel(st) { return { open: 'รอช่วยเหลือ', rescued: 'ช่วยเหลือแล้ว', closed: 'ปิดเคส' }[st] || ''; }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function initPage() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'auth.html'; return; }
+      currentUser = session.user;
+
+      if (!postId) {
+        document.getElementById('postRoot').innerHTML = '<div class="empty-feed">ไม่พบโพสต์ที่ระบุ</div>';
+        return;
+      }
+
+      const { data: myProfile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      const emailPrefix = currentUser.email.split('@')[0];
+      document.getElementById('sidebarDisplayName').textContent = myProfile?.display_name || emailPrefix;
+      document.getElementById('sidebarUsernameHandle').textContent = '@' + (myProfile?.username || emailPrefix);
+      document.getElementById('sidebarAvatarImg').src = avatarUrlFor(myProfile || {});
+
+      await loadPost();
+    }
+
+    async function loadPost() {
+      const root = document.getElementById('postRoot');
+
+      const { data: post, error } = await sb.from('posts')
+        .select(`
+          id, caption, latitude, longitude, location_name, severity, status, created_at, user_id,
+          profiles!posts_user_id_fkey ( username, display_name, avatar_url ),
+          post_images ( url, order_index ),
+          likes ( user_id )
+        `)
+        .eq('id', postId)
+        .single();
+
+      if (error || !post) {
+        root.innerHTML = '<div class="empty-feed">ไม่พบโพสต์นี้ หรืออาจถูกลบไปแล้ว</div>';
+        return;
+      }
+
+      currentPost = post;
+      const isOwner = post.user_id === currentUser.id;
+      const profile = post['profiles!posts_user_id_fkey'] || post.profiles || {};
+      const username = profile.username || 'ผู้ใช้';
+      const displayName = profile.display_name || username;
+      const avUrl = avatarUrlFor(profile);
+      const liked = (post.likes || []).some(l => l.user_id === currentUser.id);
+      const likeCount = (post.likes || []).length;
+      const img = (post.post_images || []).sort((a,b) => a.order_index - b.order_index)[0];
+
+      let badgesHtml = '';
+      if (post.severity) badgesHtml += `<span class="post-badge sev-${post.severity}">${severityLabel(post.severity)}</span>`;
+      if (post.status) badgesHtml += `<span class="post-badge status-${post.status}">${statusLabel(post.status)}</span>`;
+
+      let imgHtml = '';
+      if (img) {
+        const { data } = sb.storage.from('post-images').getPublicUrl(img.url);
+        imgHtml = `<div class="post-image-wrap"><img src="${data.publicUrl}" alt="" loading="lazy"></div>`;
+      }
+
+      let locHtml = '';
+      if (post.latitude && post.longitude) {
+        const locText = post.location_name || `${Number(post.latitude).toFixed(4)}, ${Number(post.longitude).toFixed(4)}`;
+        locHtml = `<div class="post-location">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          ${locText}
+        </div>`;
+      }
+
+      root.innerHTML = `
+        <article class="post-card">
+          ${isOwner ? `
+            <button class="post-dots-btn" id="postDotsBtn">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+            </button>
+            <div class="post-options-menu" id="postOptionsMenu">
+              <button class="post-options-item" id="editPostBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"></path></svg>
+                แก้ไขโพสต์
+              </button>
+              <button class="post-options-item danger" id="deletePostBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                ลบโพสต์
+              </button>
+            </div>
+          ` : ''}
+
+          <div class="post-head">
+            <a href="user.html?id=${post.user_id}" class="post-avatar-link">
+              <div class="post-avatar"><img src="${avUrl}" alt=""></div>
+            </a>
+            <div class="post-head-info">
+              <div class="post-name-row">
+                <a href="user.html?id=${post.user_id}" class="post-display-name">${escapeHtml(displayName)}</a>
+                <a href="user.html?id=${post.user_id}" class="post-username">@${escapeHtml(username)}</a>
+                <span class="post-dot">·</span>
+                <span class="post-time" title="${exactTime(post.created_at)}">${timeAgo(post.created_at)}</span>
+              </div>
+              ${badgesHtml ? `<div class="post-badges">${badgesHtml}</div>` : ''}
+            </div>
+          </div>
+
+          <div class="post-body" id="postViewBody">
+            ${post.caption ? `<div class="post-caption">${escapeHtml(post.caption)}</div>` : ''}
+            ${locHtml}
+            ${imgHtml}
+          </div>
+
+          <form class="post-edit-form" id="postEditForm">
+            <textarea id="editCaptionInput">${escapeHtml(post.caption || '')}</textarea>
+            <div class="post-edit-row">
+              <select class="post-edit-select" id="editSeveritySelect">
+                <option value="">ไม่ระบุระดับ</option>
+                <option value="low">ความเสี่ยงต่ำ</option>
+                <option value="medium">ปานกลาง</option>
+                <option value="high">สูง</option>
+                <option value="critical">วิกฤต</option>
+              </select>
+              <select class="post-edit-select" id="editStatusSelect">
+                <option value="open">รอช่วยเหลือ</option>
+                <option value="rescued">ช่วยเหลือแล้ว</option>
+                <option value="closed">ปิดเคส</option>
+              </select>
+            </div>
+            <div class="post-edit-actions">
+              <button type="button" class="post-edit-cancel" id="cancelEditBtn">ยกเลิก</button>
+              <button type="submit" class="post-edit-save">บันทึก</button>
+            </div>
+          </form>
+
+          <div class="post-actions">
+            <button class="post-action-btn like-btn ${liked ? 'liked' : ''}" id="likeBtn">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg>
+              <span id="likeCount">${likeCount}</span>
+            </button>
+          </div>
+
+          <div class="comments-section">
+            <h4 class="comments-title">ความคิดเห็น</h4>
+            <div id="commentsList"></div>
+
+            <div class="comment-form-wrap">
+              <form class="comment-form" id="commentForm">
+                <div class="comment-form-avatar"><img id="commentFormAvatar" src="" alt=""></div>
+                <div class="comment-form-main">
+                  <textarea class="comment-input" id="commentInput" rows="1" placeholder="แสดงความคิดเห็น..."></textarea>
+
+                  <div class="comment-location-tag" id="commentLocationTag">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span id="commentLocationText"></span>
+                    <button type="button" id="commentLocationRemove" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;display:flex;">✕</button>
+                  </div>
+
+                  <div class="comment-image-preview" id="commentImagePreview">
+                    <img id="commentImagePreviewImg" src="" alt="">
+                    <button type="button" class="comment-image-remove" id="commentImageRemove">✕</button>
+                  </div>
+
+                  <div class="comment-tools-row">
+                    <div class="comment-tools">
+                      <input type="file" id="commentFileInput" accept="image/*" style="display:none;">
+                      <button type="button" class="comment-tool-btn" id="commentAddImageBtn">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+                        รูปภาพ
+                      </button>
+                      <button type="button" class="comment-tool-btn" id="commentAddLocationBtn">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        ตำแหน่ง
+                      </button>
+                    </div>
+                    <button type="submit" class="comment-submit-btn" id="commentSubmitBtn" disabled>ส่ง</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </article>
+      `;
+
+      document.getElementById('commentFormAvatar').src = avatarUrlFor(myProfileCache || {});
+
+      document.getElementById('likeBtn').addEventListener('click', toggleLike);
+
+      if (isOwner) {
+        document.getElementById('postDotsBtn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.getElementById('postOptionsMenu').classList.toggle('open');
+        });
+        document.getElementById('editPostBtn').addEventListener('click', () => {
+          document.getElementById('postOptionsMenu').classList.remove('open');
+          document.getElementById('postViewBody').style.display = 'none';
+          document.getElementById('postEditForm').classList.add('open');
+          document.getElementById('editSeveritySelect').value = post.severity || '';
+          document.getElementById('editStatusSelect').value = post.status || 'open';
+        });
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+          document.getElementById('postEditForm').classList.remove('open');
+          document.getElementById('postViewBody').style.display = '';
+        });
+        document.getElementById('postEditForm').addEventListener('submit', savePostEdit);
+        document.getElementById('deletePostBtn').addEventListener('click', deletePost);
+      }
+
+      setupCommentForm();
+      loadComments();
+    }
+
+    async function toggleLike() {
+      const btn = document.getElementById('likeBtn');
+      const countEl = document.getElementById('likeCount');
+      const isLiked = btn.classList.contains('liked');
+
+      if (isLiked) {
+        await sb.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', postId);
+        btn.classList.remove('liked');
+        btn.querySelector('svg').setAttribute('fill', 'none');
+        countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+      } else {
+        await sb.from('likes').insert({ user_id: currentUser.id, post_id: postId });
+        btn.classList.add('liked');
+        btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        countEl.textContent = parseInt(countEl.textContent) + 1;
+      }
+    }
+
+    // ==========================================
+    // Edit / Delete post
+    // ==========================================
+    async function savePostEdit(e) {
+      e.preventDefault();
+      const caption = document.getElementById('editCaptionInput').value.trim();
+      const severity = document.getElementById('editSeveritySelect').value || null;
+      const status = document.getElementById('editStatusSelect').value;
+
+      const { error } = await sb.from('posts')
+        .update({ caption, severity, status, updated_at: new Date().toISOString() })
+        .eq('id', postId)
+        .eq('user_id', currentUser.id);
+
+      if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message); return; }
+
+      showToast('บันทึกโพสต์สำเร็จ');
+      await loadPost();
+    }
+
+    async function deletePost() {
+      document.getElementById('postOptionsMenu').classList.remove('open');
+      if (!confirm('ต้องการลบโพสต์นี้ใช่หรือไม่ การลบไม่สามารถย้อนกลับได้')) return;
+
+      const { error } = await sb.from('posts')
+        .delete()
+        .eq('id', postId)
+        .eq('user_id', currentUser.id);
+
+      if (error) { showToast('ลบไม่สำเร็จ: ' + error.message); return; }
+
+      showToast('ลบโพสต์สำเร็จ');
+      window.location.href = 'feed.html';
+    }
+
+    document.addEventListener('click', () => {
+      document.getElementById('postOptionsMenu')?.classList.remove('open');
+    });
+
+    // ==========================================
+    // Comment form: image + location
+    // ==========================================
+    function setupCommentForm() {
+      const commentInput = document.getElementById('commentInput');
+      const submitBtn = document.getElementById('commentSubmitBtn');
+
+      function updateState() {
+        submitBtn.disabled = !commentInput.value.trim() && !pendingCommentImageFile;
+      }
+      commentInput.addEventListener('input', updateState);
+
+      document.getElementById('commentAddImageBtn').addEventListener('click', () => {
+        document.getElementById('commentFileInput').click();
+      });
+      document.getElementById('commentFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        pendingCommentImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById('commentImagePreviewImg').src = ev.target.result;
+          document.getElementById('commentImagePreview').classList.add('show');
+          updateState();
+        };
+        reader.readAsDataURL(file);
+      });
+      document.getElementById('commentImageRemove').addEventListener('click', () => {
+        pendingCommentImageFile = null;
+        document.getElementById('commentFileInput').value = '';
+        document.getElementById('commentImagePreview').classList.remove('show');
+        updateState();
+      });
+
+      document.getElementById('commentAddLocationBtn').addEventListener('click', () => {
+        if (!navigator.geolocation) { showToast('เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง'); return; }
+        navigator.geolocation.getCurrentPosition((pos) => {
+          pendingCommentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          document.getElementById('commentLocationTag').classList.add('show');
+          document.getElementById('commentLocationText').textContent =
+            `${pendingCommentLocation.lat.toFixed(4)}, ${pendingCommentLocation.lng.toFixed(4)}`;
+        }, () => showToast('ไม่สามารถเข้าถึงตำแหน่งได้'));
+      });
+      document.getElementById('commentLocationRemove').addEventListener('click', () => {
+        pendingCommentLocation = null;
+        document.getElementById('commentLocationTag').classList.remove('show');
+      });
+
+      document.getElementById('commentForm').addEventListener('submit', submitComment);
+    }
+
+    async function submitComment(e) {
+      e.preventDefault();
+      const input = document.getElementById('commentInput');
+      const body = input.value.trim();
+      const submitBtn = document.getElementById('commentSubmitBtn');
+      submitBtn.disabled = true;
+
+      const { data: newComment, error } = await sb.from('comments')
+        .insert({ post_id: postId, user_id: currentUser.id, body: body || null })
+        .select()
+        .single();
+
+      if (error) {
+        showToast('ส่งความคิดเห็นไม่สำเร็จ: ' + error.message);
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // หมายเหตุ: รูปภาพและตำแหน่งของคอมเมนต์ต้องมีคอลัมน์ image_url, latitude, longitude ในตาราง comments
+      const updateData = {};
+      if (pendingCommentLocation) {
+        updateData.latitude = pendingCommentLocation.lat;
+        updateData.longitude = pendingCommentLocation.lng;
+      }
+      if (pendingCommentImageFile) {
+        const ext = pendingCommentImageFile.name.split('.').pop();
+        const path = `${currentUser.id}/${newComment.id}.${ext}`;
+        const { error: upErr } = await sb.storage.from('comment-images').upload(path, pendingCommentImageFile);
+        if (!upErr) updateData.image_url = path;
+      }
+      if (Object.keys(updateData).length > 0) {
+        await sb.from('comments').update(updateData).eq('id', newComment.id);
+      }
+
+      input.value = '';
+      pendingCommentImageFile = null;
+      pendingCommentLocation = null;
+      document.getElementById('commentFileInput').value = '';
+      document.getElementById('commentImagePreview').classList.remove('show');
+      document.getElementById('commentLocationTag').classList.remove('show');
+      submitBtn.disabled = false;
+
+      await loadComments();
+    }
+
+    async function loadComments() {
+      const list = document.getElementById('commentsList');
+      list.innerHTML = '<div class="loading-feed" style="padding:10px 0;">กำลังโหลดความคิดเห็น...</div>';
+
+      const { data: comments, error } = await sb.from('comments')
+        .select('id, body, created_at, latitude, longitude, image_url, profiles!comments_user_id_fkey ( username, display_name, avatar_url )')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        list.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">โหลดความคิดเห็นไม่สำเร็จ</div>`;
+        return;
+      }
+      if (!comments || comments.length === 0) {
+        list.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);">ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความเห็น</div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+      comments.forEach(c => {
+        const p = c['profiles!comments_user_id_fkey'] || c.profiles || {};
+
+        let imgHtml = '';
+        if (c.image_url) {
+          const { data } = sb.storage.from('comment-images').getPublicUrl(c.image_url);
+          imgHtml = `<div class="comment-image"><img src="${data.publicUrl}" alt="" loading="lazy"></div>`;
+        }
+
+        let locHtml = '';
+        if (c.latitude && c.longitude) {
+          locHtml = `<div class="comment-location">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            ${Number(c.latitude).toFixed(4)}, ${Number(c.longitude).toFixed(4)}
+          </div>`;
+        }
+
+        const row = document.createElement('div');
+        row.className = 'comment-row';
+        row.innerHTML = `
+          <a href="user.html?id=${p.id || ''}" class="comment-avatar"><img src="${avatarUrlFor(p)}" alt=""></a>
+          <div class="comment-content">
+            <div class="comment-bubble">
+              <div class="comment-author-row">
+                <span class="comment-author">${escapeHtml(p.display_name || p.username || 'ผู้ใช้')}</span>
+              </div>
+              ${c.body ? `<div class="comment-text">${escapeHtml(c.body)}</div>` : ''}
+              ${imgHtml}
+              ${locHtml}
+            </div>
+            <div class="comment-meta-row">
+              <span class="comment-time" title="${exactTime(c.created_at)}">${timeAgo(c.created_at)}</span>
+            </div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function toggleProfileMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('sidebarProfileMenu').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+      document.getElementById('sidebarProfileMenu')?.classList.remove('open');
+    });
+    async function signOut() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const { data: p } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+        myProfileCache = p;
+      }
+      await initPage();
+    })();
+  </script>
+</body>
+</html>

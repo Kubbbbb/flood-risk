@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <title>เข้าสู่ระบบและสมัครสมาชิก | FloodSense</title>
+  
+  <style>
+    /* สไตล์เฉพาะสำหรับหน้าจอแยกแบบ Dribbble Split-Screen */
+    .dribbble-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      min-height: 100vh;
+      background: var(--surface);
+    }
+
+    /* ==========================================
+       1. ฝั่งซ้าย: Hero Visual & GIS Widget Mockups 
+       ========================================== */
+    .hero-side {
+      background: radial-gradient(circle at 15% 20%, #153c4d 0%, #07161f 100%);
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      color: #ffffff;
+    }
+
+    /* Gradient Blobs สำหรับเพิ่มมิติเบลอเรืองแสงด้านหลัง */
+    .hero-side::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(83, 182, 217, 0.16) 0%, rgba(0,0,0,0) 70%);
+      filter: blur(60px);
+      pointer-events: none;
+    }
+    .hero-side::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(39, 150, 111, 0.12) 0%, rgba(0,0,0,0) 70%);
+      filter: blur(70px);
+      pointer-events: none;
+    }
+
+    /* ส่วนหัวฝั่งซ้าย */
+    .hero-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 5;
+    }
+    .hero-header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .hero-header p {
+      margin: 2px 0 0;
+      font-size: 0.75rem;
+      color: #a9c8d1;
+    }
+
+    /* พื้นที่ตรงกลาง: สโลแกนและ Widget จำลอง */
+    .hero-center {
+      margin: auto 0;
+      z-index: 5;
+    }
+    .hero-center h2 {
+      font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+      line-height: 1.3;
+      margin: 0 0 16px 0;
+      font-weight: 700;
+      color: #fff;
+    }
+    .hero-center p {
+      color: #a6c0c8;
+      max-width: 480px;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    /* Glassmorphic Widget จำลองกราฟพยากรณ์น้ำแบบเรียลไทม์ */
+    .glass-widget {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 520px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+    .widget-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .widget-title h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e2f2f7;
+    }
+    .widget-badge {
+      background: rgba(67, 211, 153, 0.15);
+      color: #43d399;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pulse-dot-green {
+      width: 6px;
+      height: 6px;
+      background: #43d399;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(67, 211, 153, 0.25);
+    }
+
+    /* เส้นกราฟจำลองการทำนายแบบพิกัดกราฟฟิก */
+    .mockup-graph {
+      height: 100px;
+      width: 100%;
+      position: relative;
+      margin-bottom: 12px;
+      overflow: visible;
+    }
+    .mockup-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+    .stat-item span {
+      display: block;
+      font-size: 0.72rem;
+      color: #a6c0c8;
+      margin-bottom: 4px;
+    }
+    .stat-item strong {
+      font-size: 1.15rem;
+      color: #fff;
+    }
+
+    .hero-footer-note {
+      font-size: 0.76rem;
+      color: #a6c0c8;
+      z-index: 5;
+    }
+
+    /* ==========================================
+       2. ฝั่งขวา: ฟอร์มสไตล์ Clean Minimalist
+       ========================================== */
+    .form-side {
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .form-title {
+      margin-bottom: 32px;
+    }
+    .form-title h3 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      color: var(--ink);
+    }
+    .form-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    /* ปุ่ม Social Login สไตล์ Dribbble */
+    .social-btn {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s, border-color 0.2s;
+      margin-bottom: 24px;
+    }
+    .social-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 24px;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--line);
+    }
+    .divider:not(:empty)::before { margin-right: .75em; }
+    .divider:not(:empty)::after { margin-left: .75em; }
+
+    /* ปรับแต่งแถบสลับสำหรับหน้านี้โดยเฉพาะ */
+    .form-segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 24px;
+    }
+    .form-segmented button {
+      min-height: 38px;
+    }
+
+    /* ฟอร์มเปิด-ปิดแบบ Smooth */
+    .auth-form {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .auth-form.active {
+      display: flex;
+    }
+
+    /* ช่องนำเข้าข้อมูลที่มีกล่องไอคอนสไตล์ Dribbble */
+    .input-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-shell input {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 14px 10px 42px;
+      outline: 0;
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .input-shell input:focus {
+      border-color: var(--river);
+      box-shadow: 0 0 0 4px rgba(45, 134, 191, 0.12);
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* ตัวเลือกจำและลืมรหัสผ่าน */
+    .field-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+    .field-options label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .field-options input[type="checkbox"] {
+      accent-color: var(--deep);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .field-options a {
+      color: var(--river);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .field-options a:hover {
+      text-decoration: underline;
+    }
+
+    /* ปุ่มแบบพรีเมียม */
+    .primary-glow-btn {
+      min-height: 46px;
+      background: linear-gradient(135deg, var(--deep) 0%, #17526b 100%);
+      color: white;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(17, 68, 90, 0.16);
+      transition: all 0.2s ease;
+    }
+    .primary-glow-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(17, 68, 90, 0.25);
+    }
+
+    /* ปรับแต่งการตอบสนองเมื่ออยู่บนจอขนาดเล็ก (Responsive) */
+    @media (max-width: 960px) {
+      .dribbble-layout {
+        grid-template-columns: 1fr;
+      }
+      .hero-side {
+        display: none; /* ซ่อนฝั่งซ้ายเมื่ออยู่บนโมบายล์เพื่อความกระชับ */
+      }
+      .form-side {
+        padding: 40px 24px;
+      }
+    }
+
+    /* --- ปรับปรุงสไตล์เดิมเพื่อเพิ่มความสมูท --- */
+
+/* 1. เพิ่ม Smooth Transition ให้กับปุ่ม Segmented เมื่อกดสลับฝั่ง */
+.form-segmented button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, background-color, box-shadow;
+}
+
+/* 2. ซ่อนฟอร์มเริ่มต้นด้วยการลด Opacity และขยับตำแหน่งลงเล็กน้อย */
+.auth-form {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* 3. คีย์เฟรมสำหรับแอนิเมชันเปิดฟอร์มแบบหรูหราสไตล์ Dribbble */
+@keyframes fluidEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 4. เมื่อฟอร์มถูกเปิดใช้งาน (เติมคลาส .active) ให้เล่นแอนิเมชันทันที */
+.auth-form.active {
+  display: flex;
+  animation: fluidEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+  </style>
+</head>
+<body>
+
+  <div class="dribbble-layout">
+    
+    <!-- ==========================================
+       1. ฝั่งซ้าย: Hero Visual & GIS Widget Mockups 
+       ========================================== -->
+    <section class="hero-side" aria-label="ข้อมูลสถานการณ์แพลตฟอร์ม">
+      
+      <!-- โลโก้โครงการ -->
+      <div class="hero-header">
+        <div class="brand-mark" aria-hidden="true" style="width: 44px; height: 44px;">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div>
+          <h1>FloodSense</h1>
+          <p>Smart Flood Platform</p>
+        </div>
+      </div>
+
+      <!-- สโลแกนหลัก และแผนภูมิพยากรณ์ -->
+      <div class="hero-center">
+        <h2>แพลตฟอร์มจัดการ<br>อุทกภัยอัจฉริยะแบบเรียลไทม์</h2>
+        <p>วิเคราะห์ข้อมูลพยากรณ์ล่วงหน้าด้วยระบบ AI (LSTM) ตรวจสอบเส้นทางหลีกเลี่ยงน้ำท่วมด้วย GIS และเข้าถึงการช่วยเหลือเร่งด่วน</p>
+        
+        <!-- Live GIS/LSTM Mockup Widget -->
+        <div class="glass-widget">
+          <div class="widget-title">
+            <div>
+              <h3 style="margin: 0; font-size: 0.95rem;">สถานีวัดระดับน้ำ: ป่าสัก (PAS-04)</h3>
+              <p style="margin: 3px 0 0 0; font-size: 0.72rem; color: #a6c0c8;">พิกัดตรวจวัดโดย GISTDA Sphere API</p>
+            </div>
+            <div class="widget-badge">
+              <span class="pulse-dot-green"></span>
+              <span>เรียลไทม์ (Live)</span>
+            </div>
+          </div>
+          
+          <!-- จำลองกราฟเส้นหยัก LSTM คาดการณ์ด้วย SVG -->
+          <div class="mockup-graph">
+            <svg viewBox="0 0 400 100" style="width:100%; height:100%; overflow:visible;">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#43d399" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#43d399" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- กราฟหลังคาดการณ์ -->
+              <path d="M 0 60 Q 50 70 100 45 T 200 40 T 300 18 T 400 12 L 400 100 L 0 100 Z" fill="url(#chartGrad)" />
+              <path d="M 0 60 Q 50 70 100 45 T 200 40 T 300 18 T 400 12" fill="none" stroke="#43d399" stroke-width="3" stroke-linecap="round" />
+              <!-- จุดสถานะพยากรณ์ -->
+              <circle cx="300" cy="18" r="4" fill="#ffffff" stroke="#43d399" stroke-width="2"/>
+              <circle cx="400" cy="12" r="5" fill="#e0a11b" />
+              <!-- ข้อความบนกราฟ -->
+              <text x="270" y="38" fill="#a6c0c8" font-size="10" font-family="Sarabun">LSTM คาดการณ์</text>
+            </svg>
+          </div>
+
+          <div class="mockup-stats">
+            <div class="stat-item">
+              <span>ระดับน้ำคาดการณ์</span>
+              <strong>3.84 ม. <span style="color: #e0a11b; font-size: 0.76rem;">(+0.42)</span></strong>
+            </div>
+            <div class="stat-item">
+              <span>ปริมาณฝนสะสม</span>
+              <strong>112 มม.</strong>
+            </div>
+            <div class="stat-item">
+              <span>ความปลอดภัยพื้นที่</span>
+              <strong style="color: #43d399;">ปลอดภัยสูงสุด</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ลิขสิทธิ์ / หมายเหตุส่วนท้าย -->
+      <div class="hero-footer-note">
+        <p>© 2026 FloodSense Platform. ข้อมูลทั้งหมดประมวลผลผ่านโมเดลปัญญาประดิษฐ์และโครงข่าย GIS ร่วมกับข้อมูลสถิติของประเทศ</p>
+      </div>
+    </section>
+
+    <!-- ==========================================
+       2. ฝั่งขวา: ฟอร์มสไตล์ Clean Minimalist
+       ========================================== -->
+    <main class="form-side">
+      <div class="form-container">
+        
+        <!-- หัวข้อหลักของฟอร์ม -->
+        <div class="form-title">
+          <h3>ยินดีต้อนรับสู่ FloodSense</h3>
+          <p>เข้าใช้งานระบบเพื่อเข้าถึงแผนที่อุทกภัยและ Dynamic Routing</p>
+        </div>
+
+        <!-- Google Social Login (สไตล์ Dribbble ยอดนิยม) -->
+        <button type="button" class="social-btn">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.51 15.01 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.26 7.46 8.92 5.04 12 5.04z"/>
+            <path fill="#4285F4" d="M23.5 12.25c0-.82-.07-1.61-.21-2.38H12v4.5h6.48c-.28 1.48-1.11 2.73-2.37 3.58l3.69 2.87c2.16-2 3.7-4.94 3.7-8.57z"/>
+            <path fill="#FBBC05" d="M5.36 14.5c-.25-.75-.4-1.55-.4-2.38s.15-1.63.4-2.38L1.5 6.74C.54 8.64 0 10.76 0 13s.54 4.36 1.5 6.26l3.86-3.76z"/>
+            <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.69-2.87c-1.12.75-2.55 1.19-4.27 1.19-3.08 0-5.74-2.42-6.64-5.46L1.5 16.71C3.4 20.56 7.35 23 12 23z"/>
+          </svg>
+          <span>ดำเนินการต่อด้วย Google</span>
+        </button>
+
+        <div class="divider">หรือดำเนินต่อด้วยอีเมล</div>
+
+        <!-- แท็บสลับฟอร์มสไตล์ Segmented Control -->
+        <div class="segmented form-segmented">
+          <button type="button" id="tabLogin" class="active" onclick="switchTab('login')">เข้าสู่ระบบ</button>
+          <button type="button" id="tabRegister" onclick="switchTab('register')">สมัครสมาชิก</button>
+        </div>
+
+        <!-- 2.1 ฟอร์มเข้าสู่ระบบ (Sign In Form) -->
+        <form id="loginForm" class="auth-form active">
+          <div class="field">
+            <label for="loginEmail">อีเมล หรือ ชื่อผู้ใช้งาน</label>
+            <div class="input-shell">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </span>
+              <input type="text" id="loginEmail" required placeholder="name@example.com">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">รหัสผ่าน</label>
+            <div class="input-shell">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </span>
+              <input type="password" id="loginPassword" required placeholder="••••••••">
+            </div>
+          </div>
+
+          <div class="field-options">
+            <label>
+              <input type="checkbox" id="rememberMe">
+              <span>จดจำฉันในระบบ</span>
+            </label>
+            <a href="#" onclick="alert('ระบบจำลองการกู้คืนรหัสผ่าน: กรุณาติดต่อหน่วยไอทีดูแลระบบ'); return false;">ลืมรหัสผ่าน?</a>
+          </div>
+
+          <button type="submit" class="primary-glow-btn">
+            <span>เข้าสู่ระบบ</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </form>
+
+        <!-- 2.2 ฟอร์มสมัครสมาชิก (Sign Up Form) -->
+        <form id="registerForm" class="auth-form">
+          <div class="field">
+            <label for="regName">ชื่อ - นามสกุล</label>
+            <div class="input-shell">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </span>
+              <input type="text" id="regName" required placeholder="สมชาย ใจดี">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="regEmail">อีเมลแอดเดรส</label>
+            <div class="input-shell">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </span>
+              <input type="email" id="regEmail" required placeholder="name@example.com">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="regPassword">กำหนดรหัสผ่าน</label>
+            <div class="input-shell">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </span>
+              <input type="password" id="regPassword" required placeholder="อย่างน้อย 6 ตัวอักษร" minlength="6">
+            </div>
+          </div>
+
+          <div class="field-options" style="margin-top: -4px;">
+            <label style="align-items: flex-start; cursor: pointer;">
+              <input type="checkbox" required id="agreeTerms" style="margin-top: 2px;">
+              <span>ฉันยอมรับเงื่อนไขในการใช้งานบริการ และนโยบายความเป็นส่วนตัว</span>
+            </label>
+          </div>
+
+          <button type="submit" class="primary-glow-btn">
+            <span>สร้างบัญชีผู้ใช้งาน</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </form>
+
+        <!-- ฟุตเตอร์กลับหน้าแรก -->
+        <div class="auth-footer" style="margin-top: 32px; font-size: 0.8rem; text-align: center; color: var(--muted);">
+          <p>กลับไปยัง <a href="index.html" style="color: var(--river); text-decoration: none; font-weight: 500;">หน้าแรกแดชบอร์ด</a> | หรือเข้าอ่าน <a href="learn.html" style="color: var(--river); text-decoration: none; font-weight: 500;">คู่มือการเอาตัวรอด</a></p>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- โค้ดควบคุมการทำงานแอนิเมชันสำหรับสลับ Tab -->
+  <script>
+    function switchTab(tab) {
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (tab === 'login') {
+      // อัปเดตสถานะปุ่ม
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      
+      // สลับฟอร์ม
+      registerForm.classList.remove('active');
+      loginForm.classList.add('active');
+      
+      document.title = "เข้าสู่ระบบ | FloodSense";
+    } else {
+      // อัปเดตสถานะปุ่ม
+      tabLogin.classList.remove('active');
+      tabRegister.classList.add('active');
+      
+      // สลับฟอร์ม
+      loginForm.classList.remove('active');
+      registerForm.classList.add('active');
+      
+      document.title = "ลงทะเบียนเพื่อความปลอดภัย | FloodSense";
+    }
+  }
+
+  const { createClient } = supabase;
+  const sb = createClient(
+    'DatabaseLink',       // Project URL
+    'DatabaseKey'                    // anon public key
+  );
+
+  // Google Login
+  document.querySelector('.social-btn').addEventListener('click', async () => {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/index.html' }
+    });
+    if (error) showToast(error.message);
+  });
+
+  // Login ด้วยอีเมล
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      showToast(error.message);
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+
+  // Register ด้วยอีเมล
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name     = document.getElementById('regName').value;
+    const email    = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    const { error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name }   // ส่งไปให้ trigger handle_new_user ดึงใช้
+      }
+    });
+
+    if (error) {
+      showToast(error.message);
+    } else {
+      showToast('สมัครสมาชิกเรียบร้อย กรุณายืนยันอีเมลของคุณ');
+    }
+  });
+
+  // Toast helper
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+  </script>
+</body>
+</html>

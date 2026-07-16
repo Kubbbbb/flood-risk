@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>โปรไฟล์และโพสต์ของคุณ | FloodSense</title>
+  
+  <style>
+    /* ==========================================
+       สไตล์เฉพาะส่วนตั้งค่าโปรไฟล์สไตล์ Dribbble (View & Edit Mode)
+       ========================================== */
+    .profile-card-wrapper {
+      transition: all 0.3s ease;
+    }
+
+    .profile-setup-card {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 32px;
+      padding: 32px;
+    }
+
+    /* สไตล์สำหรับ View Mode (โชว์ข้อมูลแบบจัดหน้าสวยงาม) */
+    .profile-details-view {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .view-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .view-display-name {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .view-username {
+      font-size: 0.98rem;
+      color: var(--river);
+      font-weight: 600;
+      margin-top: 0px;
+    }
+
+    .view-bio-section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 4px;
+    }
+
+    .view-bio-section strong {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .view-bio-section p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    .profile-metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .meta-box {
+      border-left: 3px solid var(--line);
+      padding-left: 12px;
+    }
+
+    .meta-box span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .meta-box strong {
+      font-size: 0.88rem;
+      color: var(--ink);
+    }
+
+    /* ปุ่มดินสอแก้ไขโปรไฟล์ (Edit trigger button) */
+    .edit-trigger-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 14px;
+      font-weight: 600;
+      font-size: 0.84rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--deep);
+      transition: all 0.2s;
+    }
+    .edit-trigger-btn:hover {
+      background: var(--surface);
+      border-color: var(--river);
+      transform: translateY(-1px);
+    }
+
+    /* ตัวเลือกอัปโหลดรูปภาพโปรไฟล์ (Avatar Uploader) */
+    .avatar-upload-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .avatar-preview-wrapper {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid #ffffff;
+      box-shadow: 0 8px 24px rgba(16, 48, 70, 0.15);
+    }
+
+    .avatar-preview-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: filter 0.3s ease;
+    }
+
+    /* ส่วนปุ่มกล้องโฮเวอร์ (ใช้งานเฉพาะใน Edit Mode เท่านั้น) */
+    .avatar-preview-wrapper.editable {
+      cursor: pointer;
+    }
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 47, 62, 0.75);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 0.75rem;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .avatar-preview-wrapper.editable:hover .avatar-overlay {
+      opacity: 1;
+    }
+    .avatar-preview-wrapper.editable:hover img {
+      filter: blur(2px);
+    }
+
+    .avatar-overlay svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    #avatarFileInput {
+      display: none;
+    }
+
+    /* จัดระเบียบช่องข้อมูลในตอนแก้ */
+    .profile-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .profile-form-grid .full-width {
+      grid-column: span 2;
+    }
+
+    .username-prefix {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .username-prefix span {
+      position: absolute;
+      left: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .username-prefix input {
+      padding-left: 28px !important;
+    }
+
+    .unique-status {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .unique-status.checking { color: var(--watch); }
+    .unique-status.available { color: var(--safe); }
+    .unique-status.taken { color: var(--danger); }
+
+    /* ปรับแต่งกลุ่มปุ่มตกลง-ยกเลิกแก้ไข */
+    .edit-actions-container {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    /* เอฟเฟกต์ Fade-In สำหรับเพิ่มความนุ่มนวลตอนสลับโหมด */
+    .fade-entrance {
+      animation: tabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes tabFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ==========================================
+       ส่วนล่าง: Feed โพสต์ของผู้ใช้
+       ========================================== */
+    .posts-section {
+      margin-top: 12px;
+    }
+
+    .posts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    .posts-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .post-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(16, 48, 70, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .post-title h4 {
+      margin: 0 0 6px 0;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+    .post-title p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .post-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(217, 227, 234, 0.5);
+      padding-top: 12px;
+      margin-top: 6px;
+    }
+
+    .post-actions-btn {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-sub-btn {
+      min-height: 28px;
+      padding: 0 10px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      transition: all 0.2s;
+    }
+    .action-sub-btn:hover {
+      background: #f1f5f9;
+      color: var(--ink);
+    }
+
+    /* สไตล์สำหรับ Sidebar Profile Widget ด้านล่าง */
+    .sidebar-profile-card {
+      margin-top: auto;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar-profile-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .sidebar-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--muted);
+    }
+    .sidebar-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .sidebar-user-info {
+      min-width: 0;
+    }
+    .sidebar-display-name {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-username-handle {
+      display: block;
+      font-size: 0.72rem;
+      color: #a9c8d1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 840px) {
+      .profile-setup-card {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 20px;
+      }
+      .profile-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .profile-form-grid .full-width {
+        grid-column: span 1;
+      }
+      .posts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    .sidebar-profile-wrapper { position: relative; display: flex; align-items: center; gap: 4px; margin-top: auto; }
+    .sidebar-profile-card { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; text-decoration: none; transition: background 0.2s; }
+    .sidebar-profile-card:hover { background: rgba(255,255,255,0.12); }
+    .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-display-name { display: block; font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-username-handle { display: block; font-size: 0.72rem; color: #a9c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-dots-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: #a9c8d1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .sidebar-dots-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-profile-menu { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #1a3a4a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; }
+    .sidebar-profile-menu.open { display: block; }
+    .sidebar-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500; color: #e2f2f7; background: transparent; border: none; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-menu-item.danger { color: #f87171; }
+    .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    
+    <!-- ==========================================
+         ส่วนของเมนูด้านซ้าย (Sidebar)
+         ========================================== -->
+    <aside class="sidebar" aria-label="เมนูหลัก">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
+      </div>
+
+
+      <nav class="nav">
+        <p> ภาพรวม </p>
+        <a href="index.html" class="active" title="ภาพรวม">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </a>
+        <a href="feed.html" title="ฟีด"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg> Community</a>
+        <a href="map.html" title="แผนที่">
+          <svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>
+          Map
+        </a>
+       <p> ความช่วยเหลือ </p>
+        <a href="shelters.html" title="ศูนย์พักพิง">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+          ศูนย์พักพิง
+        </a>
+        <a href="chat.html" title="AI Chatbot">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
+          AI ผู้ช่วย
+        </a>
+        <a href="learn.html" title="คู่มือ">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
+          คู่มือ
+        </a>
+      </nav>
+
+      <!-- ส่วนล่างสุดของ Sidebar: ปุ่มข้อมูลผู้ใช้ -->
+      <div class="sidebar-profile-wrapper">
+        <a class="sidebar-profile-card" id="sidebarProfileCard">
+          <div class="sidebar-avatar">
+            <img id="sidebarAvatarImg" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%232d86bf%22/%3E%3Ctext x=%22150%22 y=%22175%22 font-size=%22140%22 fill=%22white%22 text-anchor=%22middle%22%3E%3F%3C/text%3E%3C/svg%3E" alt="รูปโปรไฟล์">
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-display-name" id="sidebarDisplayName">XXXX</span>
+            <span class="sidebar-username-handle" id="sidebarUsernameHandle">@xxxx/span>
+          </div>
+        </a>
+        <button class="sidebar-dots-btn" id="sidebarDotsBtn" onclick="toggleProfileMenu(event)" title="ตัวเลือก">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+        <div class="sidebar-profile-menu" id="sidebarProfileMenu">
+          <a href="profile.html" class="sidebar-menu-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            โปรไฟล์
+          </a>
+          <button class="sidebar-menu-item danger" onclick="signOut()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==========================================
+         ส่วนแสดงผลหลัก (Main Content)
+         ========================================== -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>ตั้งค่าข้อมูลโปรไฟล์และรายงานของคุณ</h2>
+          <p>กรอกข้อมูลส่วนตัวสำหรับสิทธิ์ผู้รายงาน และจัดเก็บประวัติข้อมูลการแจ้งเตือน</p>
+        </div>
+        <div class="top-actions">
+          <button class="sos-btn" id="openSos">
+            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        
+        <!-- ส่วนตั้งค่าโปรไฟล์ (Profiles Panel) -->
+        <section class="panel" id="profilePanel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <h3>ข้อมูลผู้ใช้งานระบบ (Profiles)</h3>
+              <p>ข้อมูลระบุตัวตนสำหรับจัดหมวดหมู่รายงานและจัดเก็บสถิติลงตาราง profiles</p>
+            </div>
+          </div>
+          
+          <!-- [1. VIEW MODE]: แสดงข้อมูลสวยงามสไตล์ Dribbble ยอดนิยม -->
+          <div class="profile-card-wrapper fade-entrance" id="profileViewMode">
+            <div class="profile-setup-card">
+              <div class="avatar-upload-container">
+                <div class="avatar-preview-wrapper">
+                  <img id="viewAvatarImg" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%232d86bf%22/%3E%3Ctext x=%22150%22 y=%22175%22 font-size=%22140%22 fill=%22white%22 text-anchor=%22middle%22%3E%3F%3C/text%3E%3C/svg%3E" alt="รูปโปรไฟล์">
+                </div>
+                <span class="badge safe">ผู้ใช้งานทั่วไป</span>
+              </div>
+              
+              <div class="profile-details-view">
+                <div class="view-header-row">
+                  <div>
+                    <h3 class="view-display-name" id="viewDisplayName">XXXX</h3>
+                    <div class="view-username" id="viewUsername">@xxxx</div>
+                  </div>
+                  <!-- ปุ่มดินสอเปิดโหมดแก้ไข [ตามที่คุณระบุ] -->
+                  <button type="button" class="edit-trigger-btn" onclick="enableEditMode()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <span>แก้ไขโปรไฟล์</span>
+                  </button>
+                </div>
+                
+                <div class="view-bio-section">
+                  <strong>เกี่ยวกับตัวเอง (Bio)</strong>
+                  <p id="viewBio">อาสาสมัครป้องกันภัยพิบัติประจำพื้นที่อำเภอบางบาล คอยสแกนจุดอพยพ อัปเดตข้อมูลระดับน้ำในระบบเรียลไทม์ และประสานงานความช่วยเหลือผ่าน SOS Queue</p>
+                </div>
+                
+                <div class="profile-metadata-grid">
+                  <div class="meta-box">
+                    <span>ผู้ติดตาม (Followers)</span>
+                    <strong id="followersCount">0 คน</strong>
+                  </div>
+                  <div class="meta-box">
+                    <span>กำลังติดตาม (Following)</span>
+                    <strong id="followingCount">0 คน</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- [2. EDIT MODE]: ฟอร์มแก้ไข (ซ่อนไว้เริ่มต้น เมื่อกดดินสอจะเปิดขึ้นมาแบบสมูท) -->
+          <div class="profile-card-wrapper" id="profileEditMode" style="display: none;">
+            <form class="profile-setup-card" onsubmit="saveProfile(event)">
+              
+              <!-- กล่องแก้ไขรูปภาพแบบมี Overlay -->
+              <div class="avatar-upload-container">
+                <label for="avatarFileInput" class="avatar-preview-wrapper editable" title="กดเพื่อเปลี่ยนรูปโปรไฟล์">
+                  <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%232d86bf%22/%3E%3Ctext x=%22150%22 y=%22175%22 font-size=%22140%22 fill=%22white%22 text-anchor=%22middle%22%3E%3F%3C/text%3E%3C/svg%3E" alt="ตัวอย่างรูปโปรไฟล์">
+                  <div class="avatar-overlay">
+                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    <span>อัปโหลดรูปใหม่</span>
+                  </div>
+                </label>
+                <input type="file" id="avatarFileInput" accept="image/*" onchange="previewImage(event)">
+                <span style="font-size: 0.72rem; color: var(--muted); text-align: center;">ขนาด 1:1 บันทึกลง<br>Supabase Storage</span>
+              </div>
+
+              <!-- ส่วนฟอร์ม Input แก้ไข -->
+              <div class="profile-form-grid">
+                
+                <div class="field">
+                  <label for="displayNameInput">ชื่อเล่นหรือชื่อแสดงตัวตน (display_name)</label>
+                  <input type="text" id="displayNameInput" required value="XXXX" placeholder="เช่น นายสมชาย ใจดี">
+                </div>
+
+                <div class="field">
+                  <label for="usernameInput">ชื่อบัญชีผู้ใช้ (username - ห้ามซ้ำ)</label>
+                  <div class="username-prefix">
+                    <span>@</span>
+                    <input type="text" id="usernameInput" required value="xxxx" placeholder="xxxx" oninput="checkUsernameUnique(this.value)">
+                  </div>
+                  <div id="usernameStatus" class="unique-status available">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>ชื่อผู้ใช้นี้สามารถใช้ได้</span>
+                  </div>
+                </div>
+
+                <div class="field full-width">
+                  <label for="bioInput">คำอธิบายตัวเอง (bio)</label>
+                  <textarea id="bioInput" placeholder="แนะนำสั้นๆ เพื่อให้ผู้ใช้คนอื่นทราบขอบเขตการทำงานของคุณ">อาสาสมัครป้องกันภัยพิบัติประจำพื้นที่อำเภอบางบาล คอยสแกนจุดอพยพ อัปเดตข้อมูลระดับน้ำในระบบเรียลไทม์ และประสานงานความช่วยเหลือผ่าน SOS Queue</textarea>
+                </div>
+
+                <!-- กลุ่มปุ่มล่างขวาของโหมดแก้ไข -->
+                <div class="full-width edit-actions-container">
+                  <button type="button" class="secondary" onclick="disableEditMode()">ยกเลิก</button>
+                  <button type="submit" class="primary">บันทึกข้อมูลส่วนตัว</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ส่วนล่าง: แสดงรายการโพสต์ที่ผู้ใช้เคยแจ้งสถานการณ์ -->
+        <section class="posts-section">
+          <div class="posts-header">
+            <div>
+              <h3 style="margin: 0; font-size: 1.05rem;">ประวัติโพสต์การแจ้งเหตุของคุณ</h3>
+              <p style="margin: 4px 0 0 0; font-size: 0.84rem; color: var(--muted);">รายงานสถานการณ์ภัยพิบัติที่คุณเคยบันทึกไว้ในฐานข้อมูล</p>
+            </div>
+            <a href="feed.html" class="secondary" style="text-decoration:none;display:inline-flex;align-items:center;">แจ้งสถานการณ์น้ำใหม่</a>
+          </div>
+
+          <div class="posts-grid" id="userPostsGrid">
+            <div class="loading-feed" style="text-align:center;padding:30px;color:var(--muted);font-size:0.85rem;">กำลังโหลดประวัติโพสต์...</div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- นำเข้าระบบควบคุมหลัก -->
+  <script src="js/bundle.js"></script>
+  
+  <script>
+    // ส่วนตรวจวัดเวลาเรียลไทม์ใน Sidebar
+    function updateLiveClock() {
+      var el = document.getElementById('liveTime');
+      if (el) el.textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateLiveClock();
+    setInterval(updateLiveClock, 30000);
+
+    // ==========================================
+    // ระบบสลับโหมด View -> Edit สไตล์ Dribbble ด้วยคลาส Fade
+    // ==========================================
+    function enableEditMode() {
+      const viewBlock = document.getElementById('profileViewMode');
+      const editBlock = document.getElementById('profileEditMode');
+
+      // ซ่อน View Block และแสดง Edit Block พร้อมเพิ่ม Animation
+      viewBlock.style.display = 'none';
+      editBlock.style.display = 'block';
+      editBlock.classList.add('fade-entrance');
+    }
+
+    function disableEditMode() {
+      const viewBlock = document.getElementById('profileViewMode');
+      const editBlock = document.getElementById('profileEditMode');
+
+      // ล้างข้อมูลฟอร์มให้กลับมาเป็นค่าล่าสุดที่บันทึกไว้ใน View Mode
+      document.getElementById('displayNameInput').value = document.getElementById('viewDisplayName').textContent;
+      document.getElementById('usernameInput').value = document.getElementById('viewUsername').textContent.replace('@', '');
+      document.getElementById('bioInput').value = document.getElementById('viewBio').textContent;
+
+      // สลับส่วนแสดงผลกลับมาเป็นโหมด View 
+      editBlock.style.display = 'none';
+      editBlock.classList.remove('fade-entrance');
+      
+      viewBlock.style.display = 'block';
+      viewBlock.classList.add('fade-entrance');
+    }
+
+    // ==========================================
+    // Supabase Config
+    // ==========================================
+    const { createClient } = supabase;
+    const sb = createClient(
+      'DatabaseLink',
+      'DatabaseKey'
+    );
+
+    let currentUser = null;
+
+    // ==========================================
+    // Init: โหลดข้อมูล profile ถ้ามี session
+    // ==========================================
+    function makeInitialsAvatar(text) {
+      const initial = (text || '?').charAt(0).toUpperCase();
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+
+    async function initPage() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+
+      currentUser = session.user;
+
+      const emailPrefix = currentUser.email.split('@')[0];
+
+      const { data: profile } = await sb.from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      const displayName = profile?.display_name || '';
+      const username    = profile?.username || emailPrefix;
+      const bio         = profile?.bio || '';
+
+      document.getElementById('viewDisplayName').textContent = displayName;
+      document.getElementById('viewUsername').textContent    = '@' + username;
+      document.getElementById('viewBio').textContent         = bio;
+      document.getElementById('sidebarDisplayName').textContent    = displayName || emailPrefix;
+      document.getElementById('sidebarUsernameHandle').textContent = '@' + username;
+      // ดึง followers / following
+      const [{ count: followers }, { count: following }] = await Promise.all([
+        sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id),
+        sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', currentUser.id)
+      ]);
+      document.getElementById('followersCount').textContent = (followers ?? 0).toLocaleString('th-TH') + ' คน';
+      document.getElementById('followingCount').textContent = (following ?? 0).toLocaleString('th-TH') + ' คน';
+
+      document.getElementById('displayNameInput').value = displayName;
+      document.getElementById('usernameInput').value    = username;
+      document.getElementById('bioInput').value         = bio;
+
+      if (profile?.avatar_url) {
+        const { data: urlData } = sb.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        const url = urlData?.publicUrl;
+        if (url) {
+          document.getElementById('viewAvatarImg').src    = url;
+          document.getElementById('avatarPreview').src    = url;
+          document.getElementById('sidebarAvatarImg').src = url;
+        }
+      } else {
+        const avatarSrc = makeInitialsAvatar(username);
+        document.getElementById('viewAvatarImg').src    = avatarSrc;
+        document.getElementById('avatarPreview').src    = avatarSrc;
+        document.getElementById('sidebarAvatarImg').src = avatarSrc;
+      }
+
+      loadMyPosts();
+    }
+
+    // ==========================================
+    // ประวัติโพสต์จริงของผู้ใช้ (จากตาราง posts)
+    // ==========================================
+    function severityLabel(sev) {
+      return { low: 'ความเสี่ยงต่ำ', medium: 'ปานกลาง', high: 'สูง', critical: 'ระดับวิกฤต' }[sev] || '';
+    }
+    function severityBadgeClass(sev) {
+      return { low: 'safe', medium: 'watch', high: 'watch', critical: 'critical' }[sev] || '';
+    }
+    function statusLabel(st) {
+      return { open: 'รอช่วยเหลือ', rescued: 'ช่วยเหลือแล้ว', closed: 'ปิดเคส' }[st] || '';
+    }
+    function timeAgoTh(dateStr) {
+      const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+      if (diff < 60) return 'เมื่อสักครู่';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชม.ที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function escapeHtmlPf(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    async function loadMyPosts() {
+      const grid = document.getElementById('userPostsGrid');
+
+      const { data: posts, error } = await sb.from('posts')
+        .select(`
+          id, caption, latitude, longitude, location_name, severity, status, created_at,
+          post_images ( url, order_index ),
+          likes ( user_id )
+        `)
+        .eq('user_id', currentUser.id)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        grid.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);">โหลดประวัติโพสต์ไม่สำเร็จ</div>`;
+        return;
+      }
+
+      if (!posts || posts.length === 0) {
+        grid.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);">คุณยังไม่เคยโพสต์รายงานสถานการณ์</div>`;
+        return;
+      }
+
+      grid.innerHTML = '';
+      posts.forEach(post => {
+        const img = (post.post_images || []).sort((a,b) => a.order_index - b.order_index)[0];
+        const likeCount = (post.likes || []).length;
+
+        let imgHtml = '';
+        if (img) {
+          const { data } = sb.storage.from('post-images').getPublicUrl(img.url);
+          imgHtml = `<div style="margin-top:10px;border-radius:8px;overflow:hidden;border:1px solid var(--line);max-height:280px;overflow:hidden;"><img src="${data.publicUrl}" style="width:100%;max-height:280px;object-fit:cover;display:block;" alt=""></div>`;
+        }
+
+        let locHtml = '';
+        if (post.latitude && post.longitude) {
+          const locText = post.location_name || `${Number(post.latitude).toFixed(4)}, ${Number(post.longitude).toFixed(4)}`;
+          locHtml = `<div style="display:flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--river);margin-top:8px;">📍 ${escapeHtmlPf(locText)}</div>`;
+        }
+
+        const LIMIT = 200;
+        const captionText = post.caption || '';
+        const captionHtml = captionText.length > LIMIT
+          ? `<div style="font-size:0.92rem;color:var(--ink);line-height:1.6;white-space:pre-wrap;word-break:break-word;">${escapeHtmlPf(captionText.slice(0, LIMIT))}... <a href="post.html?id=${post.id}" style="color:var(--river);font-weight:600;text-decoration:none;">เพิ่มเติม</a></div>`
+          : captionText
+            ? `<div style="font-size:0.92rem;color:var(--ink);line-height:1.6;white-space:pre-wrap;word-break:break-word;">${escapeHtmlPf(captionText)}</div>`
+            : '';
+
+        const card = document.createElement('article');
+        card.className = 'post-card';
+        card.style.cssText = 'cursor:pointer;';
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:0.8rem;color:var(--muted);">โพสต์เมื่อ ${timeAgoTh(post.created_at)}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${post.severity ? `<span class="badge ${severityBadgeClass(post.severity)}">${severityLabel(post.severity)}</span>` : ''}
+              ${post.status ? `<span class="badge" style="background:rgba(220,38,38,0.12);color:var(--danger);font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:999px;">${statusLabel(post.status)}</span>` : ''}
+            </div>
+          </div>
+          <div style="margin-top:8px;overflow:hidden;">
+            ${captionHtml}
+            ${locHtml}
+            ${imgHtml}
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:0.82rem;color:var(--muted);">
+            ❤️ ${likeCount} ถูกใจ
+          </div>
+        `;
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('a')) return;
+          window.location.href = `post.html?id=${post.id}`;
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    initPage();
+
+    // ==========================================
+    // checkUsernameUnique — ตรวจสอบจาก Supabase จริง
+    // ==========================================
+    let checkTimeout;
+    async function checkUsernameUnique(username) {
+      const statusEl = document.getElementById('usernameStatus');
+      clearTimeout(checkTimeout);
+
+      if (!username.trim()) {
+        statusEl.className = 'unique-status taken';
+        statusEl.innerHTML = '<span>กรุณากรอกชื่อผู้ใช้</span>';
+        return;
+      }
+
+      statusEl.className = 'unique-status checking';
+      statusEl.innerHTML = '<span>กำลังตรวจสอบ...</span>';
+
+      checkTimeout = setTimeout(async () => {
+        const { data } = await sb.from('profiles')
+          .select('id')
+          .eq('username', username.trim())
+          .neq('id', currentUser?.id ?? '')
+          .maybeSingle();
+
+        if (data) {
+          statusEl.className = 'unique-status taken';
+          statusEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span>ชื่อ "@${username}" มีผู้ใช้งานแล้ว</span>`;
+        } else {
+          statusEl.className = 'unique-status available';
+          statusEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block;"><polyline points="20 6 9 17 4 12"></polyline></svg><span>ชื่อ "@${username}" สามารถใช้งานได้</span>`;
+        }
+      }, 400);
+    }
+
+    // ==========================================
+    // saveProfile — บันทึกลง Supabase จริง
+    // ==========================================
+    let pendingAvatarFile = null;
+
+    async function saveProfile(event) {
+      event.preventDefault();
+
+      // ดึง session ใหม่ถ้า currentUser ยังว่าง
+      if (!currentUser) {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) { showSystemToast('กรุณาเข้าสู่ระบบก่อน'); return; }
+        currentUser = session.user;
+      }
+
+      const displayName = document.getElementById('displayNameInput').value.trim();
+      const username    = document.getElementById('usernameInput').value.trim();
+      const bio         = document.getElementById('bioInput').value.trim();
+
+      // ตรวจ username ซ้ำก่อนบันทึก
+      const { data: existing } = await sb.from('profiles')
+        .select('id')
+        .eq('username', username)
+        .neq('id', currentUser.id)
+        .maybeSingle();
+
+      if (existing) {
+        showSystemToast('ชื่อผู้ใช้นี้มีคนใช้แล้ว กรุณาเลือกใหม่');
+        return;
+      }
+
+      let avatar_url = null;
+
+      // อัปโหลดรูปถ้ามีการเลือกไฟล์ใหม่
+      if (pendingAvatarFile) {
+        const ext  = pendingAvatarFile.name.split('.').pop();
+        const path = `${currentUser.id}/avatar.${ext}`;
+        const { error: uploadError } = await sb.storage
+          .from('avatars')
+          .upload(path, pendingAvatarFile, { upsert: true });
+
+        if (uploadError) {
+          showSystemToast('อัปโหลดรูปภาพไม่สำเร็จ: ' + uploadError.message);
+          return;
+        }
+        avatar_url = path;
+      }
+
+      const updateData = { display_name: displayName, username, bio };
+      if (avatar_url) updateData.avatar_url = avatar_url;
+
+      const { error } = await sb.from('profiles')
+        .update(updateData)
+        .eq('id', currentUser.id);
+
+      if (error) {
+        showSystemToast('บันทึกไม่สำเร็จ: ' + error.message);
+        return;
+      }
+
+      // อัปเดต View Mode
+      document.getElementById('viewDisplayName').textContent = displayName;
+      document.getElementById('viewUsername').textContent    = '@' + username;
+      document.getElementById('viewBio').textContent         = bio;
+      document.getElementById('sidebarDisplayName').textContent      = displayName;
+      document.getElementById('sidebarUsernameHandle').textContent   = '@' + username;
+
+      if (pendingAvatarFile) {
+        const src = document.getElementById('avatarPreview').src;
+        document.getElementById('viewAvatarImg').src   = src;
+        document.getElementById('sidebarAvatarImg').src = src;
+        pendingAvatarFile = null;
+      }
+
+      disableEditMode();
+      showSystemToast('บันทึกข้อมูลสำเร็จ');
+    }
+
+    // previewImage เก็บ file จริงไว้รอ upload
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        pendingAvatarFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('avatarPreview').src = e.target.result;
+          showSystemToast('เลือกภาพใหม่เรียบร้อย กด "บันทึก" เพื่ออัปโหลด');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+
+    function toggleProfileMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('sidebarProfileMenu').classList.toggle('open');
+    }
+
+    document.addEventListener('click', () => {
+      document.getElementById('sidebarProfileMenu')?.classList.remove('open');
+    });
+
+    async function signOut() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+
+    function showSystemToast(message) {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
+      }
+    }
+  </script>
+</body>
+</html>

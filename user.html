@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>โปรไฟล์ผู้ใช้ | FloodSense</title>
+
+  <style>
+    .user-profile-header {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .user-profile-avatar { width: 96px; height: 96px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; border: 3px solid var(--surface); }
+    .user-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-profile-info { flex: 1; min-width: 220px; }
+    .user-profile-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .user-profile-name { font-size: 1.5rem; font-weight: 700; color: var(--ink); margin: 0; }
+    .user-profile-username { font-size: 0.92rem; color: var(--river); font-weight: 600; margin-top: 2px; }
+    .user-profile-bio { font-size: 0.9rem; color: var(--ink); line-height: 1.6; margin-top: 14px; max-width: 560px; }
+    .user-profile-stats { display: flex; gap: 24px; margin-top: 16px; }
+    .user-profile-stat strong { font-size: 1rem; color: var(--ink); }
+    .user-profile-stat span { font-size: 0.8rem; color: var(--muted); margin-left: 4px; }
+
+    .follow-btn {
+      border: none; border-radius: 999px;
+      padding: 9px 24px; font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; background: var(--river); color: #fff;
+      transition: background 0.15s;
+    }
+    .follow-btn.following { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+    .follow-btn.following:hover { background: rgba(220,38,38,0.08); color: var(--danger); border-color: var(--danger); }
+    .follow-btn:disabled { opacity: 0.6; cursor: default; }
+    .self-badge { font-size: 0.8rem; color: var(--muted); padding: 8px 16px; }
+
+    .user-feed-section { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .user-feed-title { font-size: 1rem; font-weight: 700; color: var(--ink); margin: 0 0 4px; }
+
+    /* Post card (reuse from feed.html) */
+    .post-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .post-head { display: flex; gap: 12px; align-items: flex-start; }
+    .post-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: #2d86bf; flex-shrink: 0; }
+    .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .post-head-info { flex: 1; min-width: 0; }
+    .post-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .post-display-name { font-weight: 700; font-size: 0.92rem; color: var(--ink); }
+    .post-time { font-size: 0.78rem; color: var(--muted); }
+    .post-dot { color: var(--muted); font-size: 0.7rem; }
+    .post-badges { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+    .post-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .post-badge.sev-low { background: rgba(54,163,103,0.14); color: var(--safe); }
+    .post-badge.sev-medium { background: rgba(214,158,46,0.16); color: var(--watch); }
+    .post-badge.sev-high { background: rgba(217,119,6,0.16); color: #d97706; }
+    .post-badge.sev-critical { background: rgba(220,38,38,0.14); color: var(--danger); }
+    .post-badge.status-open { background: rgba(220,38,38,0.12); color: var(--danger); }
+    .post-badge.status-rescued { background: rgba(54,163,103,0.14); color: var(--safe); }
+    .post-badge.status-closed { background: var(--line); color: var(--muted); }
+    .post-body { margin-top: 10px; overflow: hidden; }
+    .post-caption { font-size: 0.92rem; color: var(--ink); line-height: 1.6; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; }
+    .post-location { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--river); margin-top: 8px; }
+    .post-image-wrap { margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+    .post-image-wrap img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+    .post-actions { display: flex; gap: 18px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .post-action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--muted); font-size: 0.82rem; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+    .post-action-btn:hover { background: var(--surface); color: var(--ink); }
+    .post-action-btn.liked { color: var(--danger); }
+
+    .empty-feed { text-align: center; padding: 30px 20px; color: var(--muted); }
+    .loading-feed { text-align: center; padding: 24px; color: var(--muted); font-size: 0.85rem; }
+
+    .sidebar-profile-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+    .sidebar-profile-card {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar-profile-card:hover { background: rgba(255,255,255,0.12); }
+    .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-display-name { display: block; font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-username-handle { display: block; font-size: 0.72rem; color: #a9c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-dots-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: #a9c8d1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .sidebar-dots-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-profile-menu { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #1a3a4a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; }
+    .sidebar-profile-menu.open { display: block; }
+    .sidebar-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500; color: #e2f2f7; background: transparent; border: none; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-menu-item.danger { color: #f87171; }
+    .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ========================================== Sidebar ========================================== -->
+    <aside class="sidebar" aria-label="เมนูหลัก">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
+      </div>
+
+      <nav class="nav">
+        <p> ภาพรวม </p>
+        <a href="index.html"  class="active" title="ภาพรวม">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </a>
+        <a href="feed.html" title="ฟีด"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg> Community</a>
+        <a href="map.html" title="แผนที่">
+          <svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>
+          Map
+        </a>
+       <p> ความช่วยเหลือ </p>
+        <a href="shelters.html" title="ศูนย์พักพิง">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+          ศูนย์พักพิง
+        </a>
+        <a href="chat.html" title="AI Chatbot">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
+          AI ผู้ช่วย
+        </a>
+        <a href="learn.html" title="คู่มือ">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
+          คู่มือ
+        </a>
+      </nav>
+
+      <div class="sidebar-profile-wrapper">
+        <a href="profile.html" class="sidebar-profile-card" id="sidebarProfileCard">
+          <div class="sidebar-avatar">
+            <img id="sidebarAvatarImg" src="" alt="รูปโปรไฟล์">
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-display-name" id="sidebarDisplayName"></span>
+            <span class="sidebar-username-handle" id="sidebarUsernameHandle"></span>
+          </div>
+        </a>
+        <button class="sidebar-dots-btn" onclick="toggleProfileMenu(event)" title="ตัวเลือก">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+        <div class="sidebar-profile-menu" id="sidebarProfileMenu">
+          <a href="profile.html" class="sidebar-menu-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            โปรไฟล์
+          </a>
+          <button class="sidebar-menu-item danger" onclick="signOut()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================== Main ========================================== -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>โปรไฟล์ผู้ใช้</h2>
+          <p>ดูข้อมูลและโพสต์ของผู้ใช้คนนี้</p>
+        </div>
+        <div class="top-actions">
+          <button class="sos-btn" id="openSos">
+            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
+          </button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div id="userProfileRoot">
+          <div class="loading-feed">กำลังโหลดข้อมูลผู้ใช้...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h3 id="sosTitle">ส่งคำร้องขอความช่วยเหลือ SOS</h3>
+        <button class="icon-btn" id="closeSos" title="ปิด"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+      <form class="dialog-body" id="sosForm">
+        <div class="field"><label for="sosName">ชื่อผู้แจ้ง</label><input id="sosName" required placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field"><label for="sosLocation">ตำแหน่งหรือพิกัด</label><input id="sosLocation" required value="โซน C ซอยริมคลอง 4"></div>
+        <div class="field"><label for="sosDetail">รายละเอียดเหตุฉุกเฉิน</label><textarea id="sosDetail" required placeholder="จำนวนผู้ประสบภัย ระดับน้ำ ความเร่งด่วน"></textarea></div>
+        <button class="sos-btn" type="submit">ส่งพิกัดให้หน่วยกู้ภัย</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/bundle.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'DatabaseLink',
+      'DatabaseKey'
+    );
+
+    let currentUser = null;
+    const targetUserId = new URLSearchParams(window.location.search).get('id');
+
+    function makeInitialsAvatar(text) {
+      const initial = (text || '?').charAt(0).toUpperCase();
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+    function avatarUrlFor(profile) {
+      if (profile?.avatar_url) {
+        const { data } = sb.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        if (data?.publicUrl) return data.publicUrl;
+      }
+      return makeInitialsAvatar(profile?.username || profile?.display_name || '?');
+    }
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    function timeAgo(dateStr) {
+      const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+      if (diff < 60) return 'เมื่อสักครู่';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชม.ที่แล้ว';
+      if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' วันที่แล้ว';
+      return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function severityLabel(sev) { return { low: 'ความเสี่ยงต่ำ', medium: 'ปานกลาง', high: 'สูง', critical: 'วิกฤต' }[sev] || ''; }
+    function statusLabel(st) { return { open: 'รอช่วยเหลือ', rescued: 'ช่วยเหลือแล้ว', closed: 'ปิดเคส' }[st] || ''; }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function initPage() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'auth.html'; return; }
+      currentUser = session.user;
+
+      if (!targetUserId) {
+        document.getElementById('userProfileRoot').innerHTML = '<div class="empty-feed">ไม่พบผู้ใช้ที่ระบุ</div>';
+        return;
+      }
+
+      // ถ้ากดดูตัวเอง ให้ redirect ไป profile.html
+      if (targetUserId === currentUser.id) {
+        window.location.href = 'profile.html';
+        return;
+      }
+
+      const { data: myProfile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      document.getElementById('sidebarDisplayName').textContent = myProfile?.display_name || currentUser.email.split('@')[0];
+      document.getElementById('sidebarUsernameHandle').textContent = '@' + (myProfile?.username || currentUser.email.split('@')[0]);
+      document.getElementById('sidebarAvatarImg').src = avatarUrlFor(myProfile || {});
+
+      await loadUserProfile();
+    }
+
+    async function loadUserProfile() {
+      const root = document.getElementById('userProfileRoot');
+
+      const { data: profile, error } = await sb.from('profiles')
+        .select('*')
+        .eq('id', targetUserId)
+        .single();
+
+      if (error || !profile) {
+        root.innerHTML = '<div class="empty-feed">ไม่พบผู้ใช้นี้</div>';
+        return;
+      }
+
+      const [{ count: followersCount }, { count: followingCount }, { data: isFollowingRow }] = await Promise.all([
+        sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', targetUserId),
+        sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', targetUserId),
+        sb.from('follows').select('follower_id').eq('follower_id', currentUser.id).eq('following_id', targetUserId).maybeSingle()
+      ]);
+
+      const isFollowing = !!isFollowingRow;
+      const avUrl = avatarUrlFor(profile);
+
+      root.innerHTML = `
+        <div class="user-profile-header">
+          <div class="user-profile-avatar"><img src="${avUrl}" alt=""></div>
+          <div class="user-profile-info">
+            <div class="user-profile-top-row">
+              <div>
+                <h2 class="user-profile-name">${escapeHtml(profile.display_name || profile.username)}</h2>
+                <div class="user-profile-username">@${escapeHtml(profile.username)}</div>
+              </div>
+              <button class="follow-btn ${isFollowing ? 'following' : ''}" id="followBtn">
+                ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
+              </button>
+            </div>
+            ${profile.bio ? `<div class="user-profile-bio">${escapeHtml(profile.bio)}</div>` : ''}
+            <div class="user-profile-stats">
+              <div class="user-profile-stat"><strong id="followersCountVal">${(followersCount ?? 0).toLocaleString('th-TH')}</strong><span>ผู้ติดตาม</span></div>
+              <div class="user-profile-stat"><strong>${(followingCount ?? 0).toLocaleString('th-TH')}</strong><span>กำลังติดตาม</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-feed-section">
+          <h3 class="user-feed-title">โพสต์</h3>
+          <div id="userFeedList"><div class="loading-feed">กำลังโหลดโพสต์...</div></div>
+        </div>
+      `;
+
+      setupFollowButton(isFollowing);
+      loadUserPosts(profile);
+    }
+
+    function setupFollowButton(initiallyFollowing) {
+      const btn = document.getElementById('followBtn');
+      let following = initiallyFollowing;
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const countEl = document.getElementById('followersCountVal');
+        let count = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
+
+        if (following) {
+          const { error } = await sb.from('follows')
+            .delete()
+            .eq('follower_id', currentUser.id)
+            .eq('following_id', targetUserId);
+          if (!error) {
+            following = false;
+            btn.textContent = 'ติดตาม';
+            btn.classList.remove('following');
+            countEl.textContent = Math.max(0, count - 1).toLocaleString('th-TH');
+          }
+        } else {
+          const { error } = await sb.from('follows')
+            .insert({ follower_id: currentUser.id, following_id: targetUserId });
+          if (!error) {
+            following = true;
+            btn.textContent = 'กำลังติดตาม';
+            btn.classList.add('following');
+            countEl.textContent = (count + 1).toLocaleString('th-TH');
+          } else {
+            showToast('ติดตามไม่สำเร็จ: ' + error.message);
+          }
+        }
+        btn.disabled = false;
+      });
+
+      btn.addEventListener('mouseenter', () => {
+        if (following) btn.textContent = 'เลิกติดตาม';
+      });
+      btn.addEventListener('mouseleave', () => {
+        if (following) btn.textContent = 'กำลังติดตาม';
+      });
+    }
+
+    async function loadUserPosts(profile) {
+      const list = document.getElementById('userFeedList');
+
+      const { data: posts, error } = await sb.from('posts')
+        .select(`
+          id, caption, latitude, longitude, location_name, severity, status, created_at,
+          post_images ( url, order_index ),
+          likes ( user_id ),
+          comments ( id )
+        `)
+        .eq('user_id', targetUserId)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        list.innerHTML = `<div class="empty-feed">โหลดโพสต์ไม่สำเร็จ</div>`;
+        return;
+      }
+      if (!posts || posts.length === 0) {
+        list.innerHTML = `<div class="empty-feed">ผู้ใช้นี้ยังไม่มีโพสต์</div>`;
+        return;
+      }
+
+      const avUrl = avatarUrlFor(profile);
+      list.innerHTML = '';
+      posts.forEach(post => {
+        const liked = (post.likes || []).some(l => l.user_id === currentUser.id);
+        const likeCount = (post.likes || []).length;
+        const commentCount = (post.comments || []).length;
+        const img = (post.post_images || []).sort((a,b) => a.order_index - b.order_index)[0];
+
+        let badgesHtml = '';
+        if (post.severity) badgesHtml += `<span class="post-badge sev-${post.severity}">${severityLabel(post.severity)}</span>`;
+        if (post.status) badgesHtml += `<span class="post-badge status-${post.status}">${statusLabel(post.status)}</span>`;
+
+        let imgHtml = '';
+        if (img) {
+          const { data } = sb.storage.from('post-images').getPublicUrl(img.url);
+          imgHtml = `<div class="post-image-wrap"><img src="${data.publicUrl}" alt="" loading="lazy"></div>`;
+        }
+
+        let locHtml = '';
+        if (post.latitude && post.longitude) {
+          const locText = post.location_name || `${Number(post.latitude).toFixed(4)}, ${Number(post.longitude).toFixed(4)}`;
+          locHtml = `<div class="post-location">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            ${locText}
+          </div>`;
+        }
+
+        const card = document.createElement('article');
+        card.className = 'post-card';
+        card.innerHTML = `
+          <div class="post-head">
+            <div class="post-avatar"><img src="${avUrl}" alt=""></div>
+            <div class="post-head-info">
+              <div class="post-name-row">
+                <span class="post-display-name">${escapeHtml(profile.display_name || profile.username)}</span>
+                <span class="post-dot">·</span>
+                <span class="post-time">${timeAgo(post.created_at)}</span>
+              </div>
+              ${badgesHtml ? `<div class="post-badges">${badgesHtml}</div>` : ''}
+            </div>
+          </div>
+          <div class="post-body">
+            ${post.caption ? (() => {
+            const LIMIT = 200;
+            const text = post.caption;
+            return text.length > LIMIT
+              ? `<div class="post-caption">${escapeHtml(text.slice(0, LIMIT))}... <a href="post.html?id=${post.id}" class="read-more-link" style="color:var(--river);font-weight:600;text-decoration:none;">เพิ่มเติม</a></div>`
+              : `<div class="post-caption">${escapeHtml(text)}</div>`;
+          })() : ''}
+            ${locHtml}
+            ${imgHtml}
+          </div>
+          <div class="post-actions">
+            <button class="post-action-btn like-btn ${liked ? 'liked' : ''}" data-post-id="${post.id}">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"></path></svg>
+              <span class="like-count">${likeCount}</span>
+            </button>
+            <button class="post-action-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg>
+              <span class="comment-count">${commentCount}</span>
+            </button>
+          </div>
+        `;
+
+        card.querySelector('.like-btn').addEventListener('click', async () => {
+          const btn = card.querySelector('.like-btn');
+          const countEl = btn.querySelector('.like-count');
+          const isLiked = btn.classList.contains('liked');
+          if (isLiked) {
+            await sb.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', post.id);
+            btn.classList.remove('liked');
+            btn.querySelector('svg').setAttribute('fill', 'none');
+            countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+          } else {
+            await sb.from('likes').insert({ user_id: currentUser.id, post_id: post.id });
+            btn.classList.add('liked');
+            btn.querySelector('svg').setAttribute('fill', 'currentColor');
+            countEl.textContent = parseInt(countEl.textContent) + 1;
+          }
+        });
+
+        list.appendChild(card);
+      });
+    }
+
+    function toggleProfileMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('sidebarProfileMenu').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+      document.getElementById('sidebarProfileMenu')?.classList.remove('open');
+    });
+    async function signOut() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

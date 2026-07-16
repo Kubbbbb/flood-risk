@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <title>ภาพรวม | FloodSense</title>
+  <style>
+    .sidebar-profile-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+    .sidebar-profile-card {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar-profile-card:hover { background: rgba(255,255,255,0.12); }
+    .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-display-name { display: block; font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-username-handle { display: block; font-size: 0.72rem; color: #a9c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-dots-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: #a9c8d1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .sidebar-dots-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-profile-menu { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #1a3a4a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; }
+    .sidebar-profile-menu.open { display: block; }
+    .sidebar-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500; color: #e2f2f7; background: transparent; border: none; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-menu-item.danger { color: #f87171; }
+    .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+  </style>
+  <style>
+    /* ===== Dashboard grid ===== */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .dash-wide { grid-column: 1 / -1; }
+    .dash-tall { grid-row: span 2; }
+    @media (max-width: 960px) { .dash-grid { grid-template-columns: 1fr; } .dash-tall { grid-row: auto; } }
+
+    /* ===== Metric cards ===== */
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 0; }
+    @media (max-width: 960px) { .metrics { grid-template-columns: repeat(2,1fr); } }
+    .metrics .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+    .metrics .metric .label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .metrics .metric .label span:first-child { font-size: 0.76rem; color: var(--muted); font-weight: 500; }
+    .metrics .metric strong { display: block; font-size: 1.8rem; font-weight: 800; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+    .metrics .metric small { font-size: 0.72rem; color: var(--muted); }
+
+    /* ===== Section eyebrow ===== */
+    .section-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 20px 0 0; }
+
+    /* ===== Forecast ===== */
+    .forecast-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+    .forecast-day {
+      flex: 1; min-width: 0; text-align: center;
+      padding: 12px 6px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--line);
+    }
+    .forecast-day:first-child { border-color: #2d86bf; background: rgba(45,134,191,0.06); }
+    .forecast-day .fday  { font-size: 0.7rem; font-weight: 700; color: var(--ink); }
+    .forecast-day .fdate { font-size: 0.66rem; color: var(--muted); margin-bottom: 6px; }
+    .forecast-day .ficon { font-size: 1.5rem; line-height: 1; margin-bottom: 5px; }
+    .forecast-day .ftemp { font-size: 0.78rem; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+    .forecast-day .frain { font-size: 0.74rem; color: #2563eb; font-weight: 600; }
+    .forecast-day.high { border-color: #3b82f6; }
+    .forecast-day.very-high { border-color: #1d4ed8; background: rgba(29,78,216,0.05); }
+    .forecast-loading { color: var(--muted); font-size: 0.84rem; padding: 8px 0; }
+
+    /* ===== SOS list ===== */
+    .sos-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .sos-item:last-child { border-bottom: none; }
+    .sos-dot { flex-shrink:0; width:8px; height:8px; border-radius:50%; margin-top:6px; }
+    .sos-dot.critical { background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,0.15); }
+    .sos-dot.high { background:#d97706; }
+    .sos-dot.medium { background:#ca8a04; }
+    .sos-dot.low { background:#16a34a; }
+    .sos-body { flex:1; min-width:0; }
+    .sos-text { font-size: 0.86rem; color: var(--ink); line-height: 1.5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sos-meta { display: flex; gap: 8px; margin-top: 3px; font-size: 0.72rem; color: var(--muted); }
+    .sos-sev { flex-shrink:0; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:999px; margin-top:2px; }
+    .sos-sev.critical { background:rgba(220,38,38,0.1);color:#dc2626; }
+    .sos-sev.high { background:rgba(217,119,6,0.1);color:#d97706; }
+    .sos-sev.medium { background:rgba(234,179,8,0.1);color:#ca8a04; }
+    .sos-sev.low { background:rgba(54,163,103,0.1);color:#16a34a; }
+
+    /* ===== River cards ===== */
+    .river-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    @media (max-width:960px) { .river-grid { grid-template-columns:repeat(2,1fr); } }
+    .river-card { padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+    .river-card.danger { border-color: rgba(220,38,38,0.35); background: rgba(220,38,38,0.03); }
+    .river-name { font-size: 0.76rem; color: var(--muted); margin-bottom: 4px; }
+    .river-val { font-size: 1.1rem; font-weight: 800; color: var(--ink); }
+    .river-card.danger .river-val { color: #dc2626; }
+    .river-unit { font-size: 0.7rem; color: var(--muted); }
+    .river-bar { height: 3px; border-radius: 2px; background: var(--line); margin-top: 8px; }
+    .river-bar-fill { height: 100%; border-radius: 2px; background: #2d86bf; }
+    .river-bar-fill.danger { background: #dc2626; }
+
+    /* ===== GISTDA ===== */
+    .gistda-ok { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 0.88rem; color: var(--safe); font-weight: 600; }
+    .gistda-warn { color: #dc2626; font-size: 0.9rem; font-weight: 700; }
+
+    /* ===== Shelter list ===== */
+    .shelter-dash-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); }
+    .shelter-dash-item:last-child { border-bottom:none; }
+    .shelter-dash-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .shelter-dash-dot.open { background:#16a34a; }
+    .shelter-dash-dot.full { background:#f59e0b; }
+    .shelter-dash-dot.closed { background:#94a3b8; }
+    .shelter-dash-name { font-size:0.86rem; font-weight:600; color:var(--ink); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .shelter-dash-cap { font-size:0.74rem; color:var(--muted); flex-shrink:0; }
+    .shelter-dash-link { font-size:0.74rem; color:var(--river); text-decoration:none; font-weight:600; flex-shrink:0; }
+    .shelter-dash-link:hover { text-decoration:underline; }
+
+    .dash-loading { color: var(--muted); font-size: 0.84rem; padding: 10px 0; }
+
+    /* ---- Topbar: greeting + refresh ---- */
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .topbar-updated { font-size: 0.76rem; color: var(--muted); white-space: nowrap; }
+    .refresh-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--line);
+      color: var(--ink); font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, transform 0.15s;
+    }
+    .refresh-btn:hover { background: rgba(45,134,191,0.08); }
+    .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    .refresh-btn:disabled { opacity: 0.6; cursor: default; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Overall status banner ---- */
+    .status-banner {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px; border-radius: 12px; margin-top: 16px;
+      border: 1px solid var(--line); background: var(--surface);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .status-banner .status-icon {
+      flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .status-banner .status-icon svg { width: 22px; height: 22px; }
+    .status-banner .status-text { flex: 1; min-width: 0; }
+    .status-banner .status-title { font-size: 0.98rem; font-weight: 800; margin-bottom: 2px; }
+    .status-banner .status-desc { font-size: 0.82rem; color: var(--muted); }
+    .status-banner.ok { border-color: rgba(54,163,103,0.35); background: rgba(54,163,103,0.06); }
+    .status-banner.ok .status-icon { background: rgba(54,163,103,0.14); color: #16a34a; }
+    .status-banner.ok .status-title { color: #16a34a; }
+    .status-banner.warn { border-color: rgba(217,119,6,0.35); background: rgba(217,119,6,0.06); }
+    .status-banner.warn .status-icon { background: rgba(217,119,6,0.14); color: #d97706; }
+    .status-banner.warn .status-title { color: #d97706; }
+    .status-banner.danger { border-color: rgba(220,38,38,0.35); background: rgba(220,38,38,0.07); }
+    .status-banner.danger .status-icon { background: rgba(220,38,38,0.14); color: #dc2626; }
+    .status-banner.danger .status-title { color: #dc2626; }
+
+    /* ---- Metric card emphasis ---- */
+    .metric.metric-alert strong { color: #dc2626; }
+    .metric-icon { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-left: 4px; vertical-align: -2px; }
+
+    .river-card.danger-card { border-color: rgba(220,38,38,0.4); background: rgba(220,38,38,0.04); }
+    .river-rank { font-size: 0.66rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+    .section-eyebrow { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 20px 0 -6px; }
+    .section-eyebrow:first-child { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="เมนูหลัก">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
+      </div>
+
+
+      <nav class="nav">
+        <p> ภาพรวม </p>
+        <a class="active" title="ภาพรวม">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </a>
+        <a href="feed.html" title="ฟีด"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg> Community</a>
+        <a href="map.html" title="แผนที่">
+          <svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>
+          Map
+        </a>
+       <p> ความช่วยเหลือ </p>
+        <a href="shelters.html" title="ศูนย์พักพิง">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+          ศูนย์พักพิง
+        </a>
+        <a href="chat.html" title="AI Chatbot">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
+          AI ผู้ช่วย
+        </a>
+        <a href="learn.html" title="คู่มือ">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
+          คู่มือ
+        </a>
+      </nav>
+
+      <!-- Sidebar Profile -->
+      <div class="sidebar-profile-wrapper">
+        <a href="profile.html" class="sidebar-profile-card" id="sidebarProfileCard">
+          <div class="sidebar-avatar">
+            <img id="sidebarAvatarImg" src="" alt="รูปโปรไฟล์">
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-display-name" id="sidebarDisplayName"></span>
+            <span class="sidebar-username-handle" id="sidebarUsernameHandle"></span>
+          </div>
+        </a>
+        <button class="sidebar-dots-btn" id="sidebarDotsBtn" onclick="toggleProfileMenu(event)" title="ตัวเลือก">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+        <div class="sidebar-profile-menu" id="sidebarProfileMenu">
+          <a href="profile.html" class="sidebar-menu-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            โปรไฟล์
+          </a>
+          <button class="sidebar-menu-item danger" onclick="signOut()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2 id="greetingText">แพลตฟอร์มบริหารจัดการอุทกภัยแบบเรียลไทม์</h2>
+          <p>ภาพรวมสถานการณ์อุทกภัยในพื้นที่</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="topbar-updated" id="lastUpdated"></span>
+          <button class="refresh-btn" id="refreshBtn" onclick="refreshDashboard()" title="รีเฟรชข้อมูล">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+            รีเฟรช
+          </button>
+        </div>
+      </header>
+      <section class="content">
+
+        <!-- ===== สรุปสถานการณ์รวม ===== -->
+        <div class="status-banner" id="statusBanner">
+          <div class="status-icon" id="statusIcon"></div>
+          <div class="status-text">
+            <div class="status-title" id="statusTitle">กำลังประเมินสถานการณ์...</div>
+            <div class="status-desc" id="statusDesc">รวบรวมข้อมูลจากทุกแหล่งเพื่อสรุปภาพรวม</div>
+          </div>
+        </div>
+
+        <!-- ===== Metric cards ===== -->
+        <div class="metrics">
+          <article class="metric">
+            <div class="label"><span>SOS รอความช่วยเหลือ</span></div>
+            <strong id="sosCount">—</strong>
+            <small>โพสต์ที่ยังเปิดอยู่</small>
+          </article>
+          <article class="metric" id="criticalMetric">
+            <div class="label"><span>วิกฤต / เร่งด่วน</span></div>
+            <strong id="criticalCount">—</strong>
+            <small>ต้องการความช่วยเหลือทันที</small>
+          </article>
+          <article class="metric">
+            <div class="label"><span>ฝนวันนี้ · ขอนแก่น</span></div>
+            <strong id="rainfall24h">—</strong>
+            <small>มม.</small>
+          </article>
+          <article class="metric">
+            <div class="label"><span>พื้นที่น้ำท่วม</span></div>
+            <strong id="gistdaFloodCount">—</strong>
+            <small>วันนี้ · อัปเดตรายวัน</small>
+          </article>
+        </div>
+
+        <!-- ===== Main grid ===== -->
+        <div class="dash-grid" style="margin-top:16px;">
+
+          <!-- พยากรณ์อากาศ 7 วัน — เต็มความกว้าง -->
+          <section class="panel dash-wide">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h3>พยากรณ์อากาศ 7 วัน</h3>
+                <p>ขอนแก่น</p>
+              </div>
+              <span id="weatherBadge" style="font-size:0.82rem;color:var(--muted);font-weight:600;">—</span>
+            </div>
+            <div class="panel-body">
+              <div class="forecast-row" id="forecastRow">
+                <div class="forecast-loading">กำลังโหลด...</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SOS ล่าสุด — ซ้าย ยืดสองแถว -->
+          <section class="panel dash-tall">
+            <div class="panel-head">
+              <div class="panel-title"><h3>คำร้อง SOS ล่าสุด</h3><p>เรียงตามความเร่งด่วน</p></div>
+              <a href="feed.html" style="font-size:0.78rem;color:#dc2626;text-decoration:none;font-weight:600;">ดูทั้งหมด →</a>
+            </div>
+            <div class="panel-body">
+              <div id="sosList"><div class="dash-loading">กำลังโหลด...</div></div>
+            </div>
+          </section>
+
+          <!-- GISTDA status — ขวาบน -->
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><h3>น้ำท่วมปัจจุบัน</h3><p>ข้อมูลดาวเทียมวันนี้</p></div>
+              <a href="map.html" style="font-size:0.78rem;color:var(--river);text-decoration:none;font-weight:600;">แผนที่ →</a>
+            </div>
+            <div class="panel-body">
+              <div id="gistdaStatus"><div class="dash-loading">กำลังดึงข้อมูล...</div></div>
+            </div>
+          </section>
+
+          <!-- ศูนย์พักพิง — ขวาล่าง -->
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><h3>ศูนย์พักพิง</h3><p>เปิดรับผู้อพยพ</p></div>
+              <a href="shelters.html" style="font-size:0.78rem;color:var(--river);text-decoration:none;font-weight:600;">ดูทั้งหมด →</a>
+            </div>
+            <div class="panel-body">
+              <div id="shelterDashList"><div class="dash-loading">กำลังโหลด...</div></div>
+            </div>
+          </section>
+
+          <!-- GloFAS River Discharge — เต็มความกว้าง -->
+          <section class="panel dash-wide">
+            <div class="panel-head">
+              <div class="panel-title"><h3>ปริมาณน้ำในแม่น้ำหลัก</h3><p>GloFAS · เทียบค่าเฉลี่ย 30 วัน</p></div>
+            </div>
+            <div class="panel-body">
+              <div class="river-grid" id="riverGrid"><div class="dash-loading">กำลังโหลด...</div></div>
+            </div>
+          </section>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h3 id="sosTitle">ส่งคำร้องขอความช่วยเหลือ SOS</h3>
+        <button class="icon-btn" id="closeSos" title="ปิด">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <form class="dialog-body" id="sosForm">
+        <div class="field"><label for="sosName">ชื่อผู้แจ้ง</label><input id="sosName" required placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field"><label for="sosLocation">ตำแหน่งหรือพิกัด</label><input id="sosLocation" required value="โซน C ซอยริมคลอง 4"></div>
+        <div class="field"><label for="sosDetail">รายละเอียดเหตุฉุกเฉิน</label><textarea id="sosDetail" required placeholder="จำนวนผู้ประสบภัย ระดับน้ำ ความเร่งด่วน"></textarea></div>
+        <button class="sos-btn" type="submit">ส่งพิกัดให้หน่วยกู้ภัย</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/bundle.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'DatabaseLink',
+      'DatabaseKey'
+    );
+
+    function makeInitialsAvatar(text) {
+      const initial = (text || '?').charAt(0).toUpperCase();
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+
+
+    // ==========================================
+    // Dashboard Data Loading
+    // ==========================================
+    const GISTDA_KEY = 'FloodInfoKey';
+
+    function timeAgo(dateStr) {
+      const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+      if (diff < 60) return 'เมื่อสักครู่';
+      if (diff < 3600) return Math.floor(diff / 60) + ' นาทีที่แล้ว';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' ชม.ที่แล้ว';
+      return Math.floor(diff / 86400) + ' วันที่แล้ว';
+    }
+
+    // สถานะรวมจากทุกแหล่งข้อมูล ใช้สรุปแบนเนอร์ด้านบน
+    const dashState = { critical: 0, sos: 0, gistda: 0, maxRiverRatio: 0, maxRain: 0 };
+
+    async function loadDashboard() {
+      await Promise.all([
+        loadSOSPosts(),
+        loadWeatherForecast(),
+        loadGistdaFlood(),
+        loadRiverDischarge(),
+        loadShelterDash()
+      ]);
+      updateStatusBanner();
+      const now = new Date();
+      document.getElementById('lastUpdated').textContent =
+        'อัปเดตล่าสุด ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function refreshDashboard() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.classList.add('spinning');
+      try {
+        await loadDashboard();
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('spinning');
+      }
+    }
+
+    function updateStatusBanner() {
+      const banner = document.getElementById('statusBanner');
+      const icon = document.getElementById('statusIcon');
+      const title = document.getElementById('statusTitle');
+      const desc = document.getElementById('statusDesc');
+      const checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+      const warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+
+      const reasons = [];
+      let level = 'ok';
+
+      if (dashState.critical > 0) {
+        level = 'danger';
+        reasons.push(`คำร้อง SOS วิกฤต ${dashState.critical} รายการ`);
+      }
+      if (dashState.maxRiverRatio > 1.5) {
+        level = 'danger';
+        reasons.push('ต้องการความช่วยเหลือเร่งด่วน');
+      }
+      if (level !== 'danger') {
+        if (dashState.sos > 0) { level = 'warn'; reasons.push(`คำร้อง SOS ที่เปิดอยู่ ${dashState.sos} รายการ`); }
+        if (dashState.gistda > 0) { level = 'warn'; reasons.push(`พื้นที่น้ำท่วม ${dashState.gistda} แห่ง`); }
+        if (dashState.maxRain >= 20) { level = 'warn'; reasons.push('มีฝนตกหนักในพยากรณ์'); }
+      }
+
+      banner.className = 'status-banner ' + level;
+      if (level === 'ok') {
+        icon.innerHTML = checkIcon;
+        title.textContent = 'สถานการณ์ปกติ';
+        desc.textContent = 'ไม่พบคำร้องขอความช่วยเหลือหรือความเสี่ยงน้ำท่วมในขณะนี้';
+      } else if (level === 'warn') {
+        icon.innerHTML = warnIcon;
+        title.textContent = 'ควรเฝ้าระวัง';
+        desc.textContent = reasons.join(' · ');
+      } else {
+        icon.innerHTML = warnIcon;
+        title.textContent = 'พบคำร้อง SOS วิกฤตความเสี่ยงสูง';
+        desc.textContent = reasons.join(' · ');
+      }
+    }
+
+    // ---- SOS Posts จาก Supabase ----
+    async function loadSOSPosts() {
+      const { data: posts } = await sb.from('posts')
+        .select('id, caption, severity, status, location_name, latitude, longitude, created_at')
+        .eq('status', 'open')
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const total = posts?.length || 0;
+      const critical = posts?.filter(p => p.severity === 'critical' || p.severity === 'high').length || 0;
+
+      dashState.sos = total;
+      dashState.critical = critical;
+
+      document.getElementById('sosCount').textContent = total;
+      document.getElementById('criticalCount').textContent = critical;
+      document.getElementById('criticalMetric').classList.toggle('metric-alert', critical > 0);
+      if (total > 0) { const el = document.getElementById('sosCountTrend'); if (el) el.textContent = `${total} รายการ`; }
+
+      const list = document.getElementById('sosList');
+      if (!posts || posts.length === 0) {
+        list.innerHTML = '<div class="gistda-ok"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>ไม่มีคำร้องขอความช่วยเหลือในขณะนี้</div>';
+        return;
+      }
+
+      // เรียงลำดับตามความรุนแรงก่อน แล้วจึงเรียงตามเวลาล่าสุด
+      const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      const sorted = [...posts].sort((a, b) => {
+        const sa = sevOrder[a.severity] ?? 4, sb = sevOrder[b.severity] ?? 4;
+        return sa !== sb ? sa - sb : new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      list.innerHTML = sorted.slice(0, 6).map(p => {
+        const sevLabel = { critical: 'วิกฤต', high: 'สูง', medium: 'ปานกลาง', low: 'ต่ำ' }[p.severity] || '—';
+        const loc = p.location_name || (p.latitude ? `${Number(p.latitude).toFixed(3)}°N` : '');
+        return `<div class="sos-item">
+          <div class="sos-dot ${p.severity || 'low'}"></div>
+          <div class="sos-body">
+            <div class="sos-text">${p.caption?.slice(0, 72) || 'ไม่มีข้อความ'}${(p.caption?.length > 72) ? '...' : ''}</div>
+            <div class="sos-meta">
+              <span class="sos-sev ${p.severity || 'low'}">${sevLabel}</span>
+              ${loc ? `<span>📍 ${loc}</span>` : ''}
+              <span>${timeAgo(p.created_at)}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ---- พยากรณ์อากาศ 7 วัน จาก Open-Meteo ----
+    async function loadWeatherForecast() {
+      const lat = 16.43, lng = 102.83; // ขอนแก่น
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=precipitation_sum,weather_code,temperature_2m_max,temperature_2m_min&forecast_days=7&timezone=Asia%2FBangkok`
+        );
+        const data = await res.json();
+        const days  = data.daily?.time || [];
+        const rain  = data.daily?.precipitation_sum || [];
+        const tmax  = data.daily?.temperature_2m_max || [];
+        const tmin  = data.daily?.temperature_2m_min || [];
+        const wcode = data.daily?.weather_code || [];
+
+        document.getElementById('rainfall24h').textContent = (rain[0] || 0).toFixed(1) + ' มม.';
+
+        const maxRain = Math.max(...rain);
+        dashState.maxRain = maxRain;
+        document.getElementById('weatherBadge').textContent =
+          maxRain >= 50 ? '⚠️ ฝนหนักมาก' : maxRain >= 20 ? '🌧 ฝนหนัก' :
+          maxRain >= 5  ? '🌦 ฝนเล็กน้อย' : '☀️ แดดออก';
+
+        function wIcon(code) {
+          if (code === 0) return '☀️';
+          if (code <= 3) return '🌤️';
+          if (code <= 48) return '🌫️';
+          if (code <= 67) return '🌧️';
+          if (code <= 77) return '❄️';
+          if (code <= 82) return '🌦️';
+          return '⛈️';
+        }
+
+        const dayNames = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+        document.getElementById('forecastRow').innerHTML = days.map((d, i) => {
+          const date = new Date(d);
+          const r  = rain[i] || 0;
+          const hi = tmax[i] != null ? Math.round(tmax[i]) : '—';
+          const lo = tmin[i] != null ? Math.round(tmin[i]) : '—';
+          const cls = r >= 50 ? 'very-high' : r >= 20 ? 'high' : '';
+          return `<div class="forecast-day ${cls}">
+            <div class="fday">${i === 0 ? 'วันนี้' : dayNames[date.getDay()]}</div>
+            <div class="fdate">${date.getDate()}/${date.getMonth()+1}</div>
+            <div class="ficon">${wIcon(wcode[i] || 0)}</div>
+            <div class="ftemp">${hi}°/${lo}°</div>
+            <div class="frain">${r.toFixed(0)} มม.</div>
+          </div>`;
+        }).join('');
+      } catch {
+        document.getElementById('forecastRow').innerHTML = '<div class="forecast-loading">โหลดไม่สำเร็จ</div>';
+      }
+    }
+
+    // ---- GISTDA Flood Status (วันละครั้ง) ----
+    async function loadGistdaFlood() {
+      const CACHE = 'gistda_dash_cache';
+      const TTL = 24 * 60 * 60 * 1000;
+      let data = null;
+
+      try {
+        const cached = sessionStorage.getItem(CACHE);
+        if (cached) {
+          const { ts, d } = JSON.parse(cached);
+          if (Date.now() - ts < TTL) data = d;
+        }
+        if (!data) {
+          const res = await fetch(
+            `https://api-gateway.gistda.or.th/api/2.0/resources/features/flood/1day?limit=100&offset=0&api_key=${GISTDA_KEY}`,
+            { headers: { accept: 'application/json' } }
+          );
+          data = await res.json();
+          sessionStorage.setItem(CACHE, JSON.stringify({ ts: Date.now(), d: data }));
+        }
+
+        const count = data.numberMatched || 0;
+        dashState.gistda = count;
+        document.getElementById('gistdaFloodCount').textContent = count + ' พื้นที่';
+
+        const statusEl = document.getElementById('gistdaStatus');
+        if (count === 0) {
+          statusEl.innerHTML = '<div class="gistda-ok"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>ไม่พบข้อมูลน้ำท่วมวันนี้</div>';
+        } else {
+          statusEl.innerHTML = `<div style="color:#dc2626;font-weight:700;font-size:0.9rem;margin-bottom:8px;">⚠️ พบพื้นที่น้ำท่วม ${count} แห่ง</div>
+          <a href="map.html" style="font-size:0.82rem;color:var(--river);text-decoration:none;font-weight:600;">→ ดูบนแผนที่</a>`;
+        }
+      } catch {
+        document.getElementById('gistdaStatus').innerHTML = '<div class="dash-loading">ไม่สามารถเชื่อมต่อได้</div>';
+        document.getElementById('gistdaFloodCount').textContent = '—';
+      }
+    }
+
+    // ---- GloFAS River Discharge ----
+
+    async function loadShelterDash() {
+      const el = document.getElementById('shelterDashList');
+      if (!el) return;
+
+      const { data: shelters } = await sb.from('shelters')
+        .select('id,name,latitude,longitude,capacity,current_count,status,accepts_pets,accepts_elderly')
+        .in('status', ['open','full'])
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (!shelters || shelters.length === 0) {
+        el.innerHTML = '<div class="dash-loading" style="text-align:center;"><a href="shelters.html" style="color:var(--river);font-weight:600;">+ เพิ่มศูนย์พักพิง</a></div>';
+        return;
+      }
+
+      el.innerHTML = shelters.map(s => {
+        const pct = s.capacity > 0 ? Math.round(s.current_count / s.capacity * 100) : null;
+        const capText = pct !== null ? `${s.current_count}/${s.capacity} คน` : '—';
+        const mapHref = s.latitude && s.longitude
+          ? `map.html?lat=${s.latitude}&lng=${s.longitude}&zoom=16` : 'map.html';
+        const statusLabel = { open:'เปิดรับ', full:'เต็ม', closed:'ปิด' }[s.status] || s.status;
+        return `<div class="shelter-dash-item">
+          <div class="shelter-dash-dot ${s.status}" title="${statusLabel}"></div>
+          <div class="shelter-dash-name">${s.name}</div>
+          <div class="shelter-dash-cap">${capText}</div>
+          <a href="${mapHref}" class="shelter-dash-link">แผนที่</a>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadRiverDischarge() {
+      const rivers = [
+        { name: 'เจ้าพระยา (สิงห์บุรี)', lat: 14.89, lng: 100.40 },
+        { name: 'ชี (ขอนแก่น)', lat: 16.44, lng: 102.83 },
+        { name: 'มูล (อุบลฯ)', lat: 15.24, lng: 104.85 },
+        { name: 'ปิง (กำแพงเพชร)', lat: 16.47, lng: 99.52 },
+        { name: 'โขง (เลย)', lat: 17.49, lng: 101.73 },
+        { name: 'แม่กลอง (ราชบุรี)', lat: 13.54, lng: 99.82 },
+      ];
+
+      const grid = document.getElementById('riverGrid');
+      grid.innerHTML = '<div class="dash-loading">กำลังดึงข้อมูลแม่น้ำ...</div>';
+
+      const results = await Promise.all(rivers.map(async (r) => {
+        try {
+          const res = await fetch(
+            `https://flood-api.open-meteo.com/v1/flood?latitude=${r.lat}&longitude=${r.lng}&daily=river_discharge,river_discharge_mean&forecast_days=7&past_days=30`
+          );
+          const d = await res.json();
+          const vals = d.daily?.river_discharge || [];
+          const means = d.daily?.river_discharge_mean || [];
+          const current = vals[30] ?? vals[vals.length - 1] ?? 0;
+          const mean = means.slice(0, 30).filter(v => v != null).reduce((a, b) => a + b, 0) / (means.slice(0, 30).filter(v => v != null).length || 1);
+          const ratio = mean > 0 ? current / mean : 1;
+          return { ...r, current: Math.round(current), mean: Math.round(mean), ratio };
+        } catch {
+          return { ...r, current: null };
+        }
+      }));
+
+      dashState.maxRiverRatio = Math.max(0, ...results.filter(r => r.current !== null).map(r => r.ratio));
+
+      // เรียงแม่น้ำที่เสี่ยงสูงสุด (ratio มากสุด) ไว้ก่อน ส่วนที่ดึงข้อมูลไม่ได้ไว้ท้ายสุด
+      const sorted = [...results].sort((a, b) => {
+        if (a.current === null) return 1;
+        if (b.current === null) return -1;
+        return b.ratio - a.ratio;
+      });
+
+      grid.innerHTML = sorted.map(r => {
+        if (r.current === null) return `<div class="river-card"><div class="river-name">${r.name}</div><div class="river-val" style="color:var(--muted);">—</div></div>`;
+        const pct = Math.min(r.ratio * 50, 100);
+        const isDanger = r.ratio > 1.5;
+        return `<div class="river-card ${isDanger ? 'danger-card' : ''}">
+          <div class="river-name">${r.name}</div>
+          <div class="river-val" ${isDanger ? 'style="color:#dc2626"' : ''}>${r.current.toLocaleString('th-TH')}</div>
+          <div class="river-unit">ม³/วินาที · ${r.ratio.toFixed(1)}× ค่าเฉลี่ย</div>
+          <div class="river-bar"><div class="river-bar-fill ${isDanger ? 'danger' : ''}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    loadDashboard();
+
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'auth.html'; return; }
+
+      const { data: profile } = await sb.from('profiles')
+        .select('username, display_name, avatar_url')
+        .eq('id', session.user.id)
+        .single();
+
+      const emailPrefix = session.user.email.split('@')[0];
+      const username    = profile?.username || emailPrefix;
+      const displayName = profile?.display_name || emailPrefix;
+
+      document.getElementById('sidebarDisplayName').textContent    = displayName;
+      document.getElementById('sidebarUsernameHandle').textContent = '@' + username;
+
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? 'สวัสดีตอนเช้า' : hour < 18 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
+      document.getElementById('greetingText').textContent = `${greeting}, ${displayName}`;
+
+      if (profile?.avatar_url) {
+        const { data: urlData } = sb.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        document.getElementById('sidebarAvatarImg').src = urlData?.publicUrl || makeInitialsAvatar(username);
+      } else {
+        document.getElementById('sidebarAvatarImg').src = makeInitialsAvatar(username);
+      }
+    })();
+
+    function toggleProfileMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('sidebarProfileMenu').classList.toggle('open');
+    }
+
+    document.addEventListener('click', () => {
+      document.getElementById('sidebarProfileMenu')?.classList.remove('open');
+    });
+
+    async function signOut() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+  </script>
+</body>
+</html>

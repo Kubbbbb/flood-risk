@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <title>คู่มือ | FloodSense</title>
+  <style>
+    .learn-layout { display: flex; flex-direction: column; }
+    .learn-tabs {
+      display: flex; gap: 4px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--line); flex-wrap: wrap;
+    }
+    .learn-tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 999px;
+      border: 1px solid var(--line); background: transparent;
+      color: var(--muted); font-family: inherit;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .learn-tab:hover { color: var(--ink); border-color: var(--ink); }
+    .learn-tab.active { background: var(--river); color: #fff; border-color: var(--river); }
+    .learn-content-area { padding-top: 24px; }
+    .learn-panel { display: none; }
+    .learn-panel.active { display: block; }
+
+    
+    .learn-section-header { margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .learn-section-header h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; color: var(--ink); }
+    .learn-section-header p { margin: 0; font-size: 0.82rem; color: var(--muted); }
+
+    
+    .learn-article { margin-bottom: 28px; }
+    .learn-article:last-child { margin-bottom: 0; }
+    .learn-article-title {
+      font-size: 0.88rem; font-weight: 700; color: var(--ink);
+      margin: 0 0 10px; padding-left: 12px;
+      border-left: 3px solid var(--river);
+    }
+    .learn-article-title.danger { border-color: var(--danger); color: var(--danger); }
+    .learn-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; color: var(--ink); line-height: 1.6;
+    }
+    .learn-item:last-child { border-bottom: none; }
+    .learn-item-num {
+      flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--river); color: #fff;
+      font-size: 0.68rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; margin-top: 2px;
+    }
+    .learn-item-dot {
+      flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--river); margin-top: 8px;
+    }
+    .learn-item-dot.danger { background: var(--danger); }
+    .learn-item strong { color: var(--ink); }
+
+    
+    .emergency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .emergency-card {
+      border: 1px solid var(--line); border-radius: 10px;
+      padding: 14px 16px; text-decoration: none; display: block; transition: background 0.15s;
+    }
+    .emergency-card:hover { background: var(--surface); }
+    .emergency-card.critical { border-left: 3px solid var(--danger); }
+    .emergency-card.high { border-left: 3px solid #d97706; }
+    .emergency-card.medium { border-left: 3px solid var(--river); }
+    .emergency-card.low { border-left: 3px solid var(--safe); }
+    .emergency-number { font-size: 1.3rem; font-weight: 800; color: var(--ink); margin-bottom: 2px; }
+    .emergency-card.critical .emergency-number { color: var(--danger); }
+    .emergency-card.high .emergency-number { color: #d97706; }
+    .emergency-card.medium .emergency-number { color: var(--river); }
+    .emergency-name { font-size: 0.84rem; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+    .emergency-desc { font-size: 0.74rem; color: var(--muted); }
+  </style>
+  <style>
+    .sidebar-profile-wrapper { position: relative; display: flex; align-items: center; gap: 4px; margin-top: auto; }
+    .sidebar-profile-card { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; text-decoration: none; transition: background 0.2s; }
+    .sidebar-profile-card:hover { background: rgba(255,255,255,0.12); }
+    .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #2d86bf; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info { min-width: 0; }
+    .sidebar-display-name { display: block; font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-username-handle { display: block; font-size: 0.72rem; color: #a9c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-dots-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: #a9c8d1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .sidebar-dots-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .sidebar-profile-menu { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #1a3a4a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; }
+    .sidebar-profile-menu.open { display: block; }
+    .sidebar-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; font-size: 0.84rem; font-weight: 500; color: #e2f2f7; background: transparent; border: none; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-menu-item.danger { color: #f87171; }
+    .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="เมนูหลัก">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
+        </div>
+        <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
+      </div>
+      
+      <nav class="nav">
+        <p> ภาพรวม </p>
+        <a href="index.html" title="ภาพรวม"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a>
+        <a href="feed.html" class="active" title="ฟีด"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg>Community</a>
+        <a href="map.html" title="แผนที่"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg>Map</a>
+        <p> ความช่วยเหลือ </p>
+        <a href="shelters.html" title="ศูนย์พักพิง"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>ศูนย์พักพิง</a>
+        <a href="chat.html" title="AI Chatbot"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>AI ผู้ช่วย</a>
+        <a href="learn.html" title="คู่มือ"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>คู่มือ</a>
+      </nav>
+      <div class="sidebar-profile-wrapper">
+        <a href="profile.html" class="sidebar-profile-card" id="sidebarProfileCard">
+          <div class="sidebar-avatar">
+            <img id="sidebarAvatarImg" src="" alt="รูปโปรไฟล์">
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-display-name" id="sidebarDisplayName"></span>
+            <span class="sidebar-username-handle" id="sidebarUsernameHandle"></span>
+          </div>
+        </a>
+        <button class="sidebar-dots-btn" onclick="toggleProfileMenu(event)" title="ตัวเลือก">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+        <div class="sidebar-profile-menu" id="sidebarProfileMenu">
+          <a href="profile.html" class="sidebar-menu-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            โปรไฟล์
+          </a>
+          <button class="sidebar-menu-item danger" onclick="signOut()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>เรียนรู้แนวทางรับมืออุทกภัย</h2>
+          <p>คำแนะนำสั้น กระชับ และนำไปใช้ได้ทันที</p>
+        </div>
+      </header>
+      <section class="content">
+        <div class="learn-layout">
+
+          
+          <div class="learn-tabs">
+            <button class="learn-tab active" data-tab="before">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
+              ก่อนน้ำมา
+            </button>
+            <button class="learn-tab" data-tab="during">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
+              ระหว่างน้ำท่วม
+            </button>
+            <button class="learn-tab" data-tab="evacuate">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"></circle><circle cx="18" cy="5" r="3"></circle><path d="M9 19h3a4 4 0 0 0 4-4V8"></path></svg>
+              การอพยพ
+            </button>
+            <button class="learn-tab" data-tab="shelter">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg>
+              ศูนย์พักพิง
+            </button>
+            <button class="learn-tab" data-tab="after">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+              หลังน้ำลด
+            </button>
+            <button class="learn-tab" data-tab="emergency">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"></path></svg>
+              เบอร์ฉุกเฉิน
+            </button>
+          </div>
+
+          
+          <div class="learn-content-area">
+
+            
+            <div class="learn-panel active" id="tab-before">
+              <div class="learn-section-header">
+                <h3>ก่อนน้ำมา — การเตรียมพร้อม</h3>
+                <p>เตรียมตั้งแต่ก่อนฤดูน้ำหลาก ลดความสูญเสียได้มากที่สุด</p>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">กระเป๋าฉุกเฉิน (เพียงพอ 72 ชั่วโมง)</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>น้ำดื่ม 3 ลิตรต่อคนต่อวัน รวม 9 ลิตรต่อคน</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>อาหารแห้งสำหรับ 3 วัน เช่น ข้าวกล่อง บะหมี่กึ่งสำเร็จรูป ปลากระป๋อง</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ยาประจำตัวครบโด้ส + ยาสามัญ เช่น ยาแก้ท้องเสีย พาราเซตามอล</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ไฟฉายพร้อมถ่านสำรอง หรือไฟฉาย Dynamo ที่ไม่ต้องใช้ถ่าน</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>Power bank ชาร์จไว้เต็ม และสาย USB ที่ใช้กับโทรศัพท์ของทุกคน</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>วิทยุ FM แบบพกพา สำหรับรับข่าวสารเมื่อสัญญาณมือถือขัดข้อง</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>เงินสด เพราะตู้ ATM อาจไม่พร้อมให้บริการ</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">เอกสารสำคัญ</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>บัตรประชาชน ทะเบียนบ้าน โฉนดที่ดิน ใส่ถุงซิปล็อกกันน้ำ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>กรมธรรม์ประกันภัย บัตรประกันสุขภาพ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ถ่ายรูปเอกสารทุกใบเก็บไว้ใน Google Photos หรือ iCloud</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">เตรียมบ้าน</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ยกของมีค่าขึ้นที่สูง โดยเฉพาะเฟอร์นิเจอร์ไม้และอุปกรณ์ไฟฟ้า</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>วางกระสอบทรายหน้าประตูและช่องระบายน้ำ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ถ่ายรูปทรัพย์สินไว้เป็นหลักฐานก่อนเกิดเหตุ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>รู้ตำแหน่ง circuit breaker และวาล์วแก๊สในบ้าน</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">วางแผนครอบครัว</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>นัดจุดนัดพบฉุกเฉินที่ทุกคนรู้จัก กรณีติดต่อกันไม่ได้</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>บันทึกเบอร์โทรฉุกเฉินไว้ในกระดาษ ไม่ใช่แค่ในโทรศัพท์</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>วางแผนเส้นทางอพยพล่วงหน้าอย่างน้อย 2 เส้นทาง</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>จัดเตรียมที่พักสำรองไว้ล่วงหน้า เช่น บ้านญาติในพื้นที่สูง</div></div>
+              </div>
+            </div>
+
+            
+            <div class="learn-panel" id="tab-during">
+              <div class="learn-section-header">
+                <h3>ระหว่างน้ำท่วม</h3>
+                <p>ข้อมูลจากกรมป้องกันและบรรเทาสาธารณภัย และ WHO</p>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title danger">ห้ามทำเด็ดขาด</div>
+                <div class="learn-item"><div class="learn-item-dot danger"></div><div>ห้ามเดินหรือขับรถลุยน้ำไหลแรง น้ำลึกเพียง 15 ซม. พัดล้มได้</div></div>
+                <div class="learn-item"><div class="learn-item-dot danger"></div><div>ห้ามสัมผัสอุปกรณ์ไฟฟ้าหรือสายไฟที่จมน้ำ</div></div>
+                <div class="learn-item"><div class="learn-item-dot danger"></div><div>ห้ามดื่มน้ำประปาที่อาจปนเปื้อน ต้มก่อนหรือใช้น้ำขวด</div></div>
+                <div class="learn-item"><div class="learn-item-dot danger"></div><div>ห้ามกลับบ้านก่อนได้รับการยืนยันว่าปลอดภัย</div></div>
+                <div class="learn-item"><div class="learn-item-dot danger"></div><div>ระวังงูและสัตว์มีพิษที่ถูกน้ำพัดมา</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">สัญญาณอันตรายที่ต้องอพยพทันที</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>น้ำขึ้นเร็วกว่า 30 ซม. ต่อชั่วโมง</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ได้ยินเสียงน้ำไหลแรงหรือเสียงดังผิดปกติในระยะใกล้</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>กลิ่นแก๊สผิดปกติ ออกจากพื้นที่และโทร 191</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>สายไฟตก หรือเห็นประกายไฟในน้ำ อย่าเข้าใกล้เด็ดขาด</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">การดูแลสุขอนามัย</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ล้างมือด้วยสบู่ก่อนกินอาหารและหลังสัมผัสน้ำท่วม</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ใส่รองเท้าบูตทุกครั้งที่เดินในน้ำ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>บาดแผลต้องปิดและรักษาให้สะอาดทันที ป้องกันการติดเชื้อ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>เช็ดเท้าให้แห้งหลังสัมผัสน้ำ ป้องกันโรคน้ำกัดเท้า</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">หากต้องอยู่ในบ้าน</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ขึ้นชั้นบนเมื่อน้ำเริ่มสูง เตรียมเชือกและสัญญาณขอความช่วยเหลือ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ปิดสวิตช์ไฟฟ้าทั้งหมดทันทีที่น้ำเริ่มเข้าบ้าน</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ประหยัดแบตเตอรี่มือถือ ใช้เฉพาะยามจำเป็น</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ติดตามข่าวสารจากวิทยุหรือโทรศัพท์ต่อเนื่อง</div></div>
+              </div>
+            </div>
+
+            
+            <div class="learn-panel" id="tab-evacuate">
+              <div class="learn-section-header">
+                <h3>การอพยพ</h3>
+                <p>การอพยพเร็วและมีแผนช่วยชีวิตได้</p>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">ขั้นตอนเมื่อต้องอพยพ</div>
+                <div class="learn-item"><div class="learn-item-num">1</div><div><strong>รับข้อมูล</strong> — ตรวจสอบประกาศจากทางการ หรือดูแผนที่ FloodSense ก่อนออกเดินทาง</div></div>
+                <div class="learn-item"><div class="learn-item-num">2</div><div><strong>แจ้งญาติ</strong> — บอกจุดหมายและเส้นทางที่จะใช้ให้คนที่รู้จักทราบ</div></div>
+                <div class="learn-item"><div class="learn-item-num">3</div><div><strong>ปิดบ้าน</strong> — ตัดไฟที่ circuit breaker ปิดแก๊ส ล็อคประตู</div></div>
+                <div class="learn-item"><div class="learn-item-num">4</div><div><strong>เลือกเส้นทาง</strong> — ใช้ถนนที่สูงกว่า หลีกเลี่ยงสะพาน ถนนริมน้ำ และพื้นที่ลุ่ม</div></div>
+                <div class="learn-item"><div class="learn-item-num">5</div><div><strong>ระหว่างเดินทาง</strong> — ไม่ขับรถลุยน้ำลึกเกิน 30 ซม. หากติดให้ออกจากรถและเดินขึ้นที่สูง</div></div>
+                <div class="learn-item"><div class="learn-item-num">6</div><div><strong>ถึงที่พัก</strong> — ลงทะเบียนกับเจ้าหน้าที่ แจ้งจำนวนคนและผู้ที่ต้องการความช่วยเหลือพิเศษ</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">สิ่งที่ต้องนำติดตัว</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>กระเป๋าฉุกเฉิน 72 ชั่วโมงที่เตรียมไว้</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>เอกสารสำคัญทั้งหมดในซองกันน้ำ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ยาประจำตัวให้พอสำหรับ 1 สัปดาห์</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>เสื้อผ้าอย่างน้อย 3 ชุด รองเท้าที่เดินได้ไกล</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>โทรศัพท์ + charger + power bank</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>สัตว์เลี้ยงพร้อมอาหาร และสายจูง ตรวจก่อนว่าศูนย์พักพิงรับสัตว์ไหม</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">กลุ่มที่ต้องช่วยเหลือก่อน</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ผู้สูงอายุและเด็กเล็ก ควรอพยพก่อนเมื่อน้ำยังต่ำ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ผู้ป่วยติดเตียง ติดต่อกู้ภัย 1784 ล่วงหน้า</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>สตรีมีครรภ์ ควรมีคนดูแลและอพยพด้วยพาหนะเสมอ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ผู้พิการ ติดต่อหน่วยงานท้องถิ่นให้จัดรถรับ</div></div>
+              </div>
+            </div>
+
+            
+            <div class="learn-panel" id="tab-shelter">
+              <div class="learn-section-header">
+                <h3>ศูนย์พักพิง</h3>
+                <p>สิ่งที่ควรรู้เมื่ออยู่ในศูนย์พักพิง</p>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">ทำทันทีเมื่อถึงศูนย์</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ลงทะเบียนชื่อ-นามสกุล จำนวนสมาชิก และหมายเลขโทรศัพท์กับเจ้าหน้าที่</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>แจ้งหากมีผู้ป่วย ผู้สูงอายุ เด็กอ่อน หรือสตรีมีครรภ์</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>แจ้งโรคประจำตัวและยาที่ต้องรับประทาน</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ถามเจ้าหน้าที่เรื่องจุดรับอาหาร ห้องน้ำ และเวลาประกาศข่าว</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">สุขอนามัยในศูนย์พักพิง</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ล้างมือก่อนกินอาหารทุกครั้ง เจลแอลกอฮอล์มักมีให้ในศูนย์</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>พื้นที่แออัดแพร่โรคได้ง่าย ใส่หน้ากากหากมีอาการไอหรือไม่สบาย</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ดื่มน้ำสะอาดที่ศูนย์จัดให้เท่านั้น</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>แจ้งเจ้าหน้าที่ทันทีหากมีอาการไข้ ท้องเสีย หรือผื่น</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">สิทธิ์ที่ได้รับในศูนย์พักพิง</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>อาหาร 3 มื้อต่อวัน จัดโดยเทศบาลหรือหน่วยงานที่รับผิดชอบ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>การรักษาพยาบาลเบื้องต้นฟรี จากทีมแพทย์อาสาสมัคร</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ข้อมูลสถานการณ์น้ำท่วมและการแจ้งเตือนอย่างต่อเนื่อง</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ความปลอดภัยส่วนบุคคล มีเจ้าหน้าที่ดูแลตลอด 24 ชั่วโมง</div></div>
+              </div>
+            </div>
+
+            
+            <div class="learn-panel" id="tab-after">
+              <div class="learn-section-header">
+                <h3>หลังน้ำลด</h3>
+                <p>อย่าเพิ่งรีบกลับบ้าน ตรวจสอบก่อนเสมอ</p>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">ตรวจสอบก่อนกลับบ้าน</div>
+                <div class="learn-item"><div class="learn-item-num">1</div><div>รอจนกว่าเจ้าหน้าที่ประกาศว่าพื้นที่ปลอดภัยแล้ว</div></div>
+                <div class="learn-item"><div class="learn-item-num">2</div><div>ให้ช่างไฟตรวจระบบไฟฟ้าก่อนเปิดใช้งาน</div></div>
+                <div class="learn-item"><div class="learn-item-num">3</div><div>ตรวจรอยร้าว ผนังเอียง หลังคาทรุด ถ้าไม่แน่ใจให้วิศวกรตรวจ</div></div>
+                <div class="learn-item"><div class="learn-item-num">4</div><div>ต้มน้ำก่อนดื่มอย่างน้อย 1 นาที จนกว่าประปาจะประกาศว่าปลอดภัย</div></div>
+                <div class="learn-item"><div class="learn-item-num">5</div><div>ใส่ถุงมือยาง รองเท้าบูต และหน้ากากตลอดเวลาที่ทำความสะอาด</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">โรคที่ต้องระวังหลังน้ำท่วม</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div><strong>โรคฉี่หนู (Leptospirosis)</strong> — หลีกเลี่ยงแช่น้ำนาน ล้างมือและเท้าทุกครั้ง</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div><strong>ท้องเสียและอหิวาตกโรค</strong> — ดื่มน้ำสะอาด กินอาหารที่ปรุงสุกเท่านั้น</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div><strong>ไข้หวัดและปอดบวม</strong> — เกิดจากความเครียดและสภาพแวดล้อมที่ชื้น</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div><strong>โรคตาแดง</strong> — ห้ามขยี้ตา ล้างมือก่อนแตะใบหน้า</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>หากมีไข้ ปวดเมื่อยตัว ภายใน 3–14 วันหลังสัมผัสน้ำ ให้พบแพทย์ทันที</div></div>
+              </div>
+
+              <div class="learn-article">
+                <div class="learn-article-title">การเรียกค่าชดเชยและขอความช่วยเหลือ</div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ถ่ายรูปความเสียหายทั้งหมดก่อนทำความสะอาด</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ติดต่อ อบต. หรือเทศบาล เพื่อลงทะเบียนผู้ประสบภัย</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>แจ้งบริษัทประกันภายใน 30 วันนับจากวันเกิดเหตุ</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ธนาคารส่วนใหญ่มีมาตรการพักชำระหนี้สำหรับผู้ประสบภัย</div></div>
+                <div class="learn-item"><div class="learn-item-dot"></div><div>ติดต่อกรมพัฒนาสังคมและสวัสดิการ โทร 1300 สำหรับความช่วยเหลือระยะยาว</div></div>
+              </div>
+            </div>
+
+            
+            <div class="learn-panel" id="tab-emergency">
+              <div class="learn-section-header">
+                <h3>เบอร์ฉุกเฉินและหน่วยงานที่เกี่ยวข้อง</h3>
+                <p>บันทึกไว้ในโทรศัพท์และกระดาษ เผื่อแบตหมด</p>
+              </div>
+
+              <div class="emergency-grid">
+                <a href="tel:191" class="emergency-card critical"><div class="emergency-number">191</div><div class="emergency-name">ตำรวจ</div><div class="emergency-desc">เหตุฉุกเฉินทั่วไป อาชญากรรม</div></a>
+                <a href="tel:199" class="emergency-card critical"><div class="emergency-number">199</div><div class="emergency-name">ดับเพลิง / กู้ภัย</div><div class="emergency-desc">เพลิงไหม้ ช่วยเหลือฉุกเฉิน</div></a>
+                <a href="tel:1669" class="emergency-card critical"><div class="emergency-number">1669</div><div class="emergency-name">EMS / รถพยาบาล</div><div class="emergency-desc">เจ็บป่วยฉุกเฉิน ต้องการรถพยาบาล</div></a>
+                <a href="tel:1784" class="emergency-card high"><div class="emergency-number">1784</div><div class="emergency-name">กรมป้องกันภัย</div><div class="emergency-desc">แจ้งอุทกภัย วาตภัย อัคคีภัย</div></a>
+                <a href="tel:1300" class="emergency-card high"><div class="emergency-number">1300</div><div class="emergency-name">กรมพัฒนาสังคม</div><div class="emergency-desc">ผู้ด้อยโอกาส ความช่วยเหลือสังคม</div></a>
+                <a href="tel:1565" class="emergency-card medium"><div class="emergency-number">1565</div><div class="emergency-name">กรมชลประทาน</div><div class="emergency-desc">ข้อมูลระดับน้ำ การระบายน้ำ</div></a>
+                <a href="tel:0243696972" class="emergency-card medium"><div class="emergency-number">02-243-6972</div><div class="emergency-name">กรมอุตุนิยมวิทยา</div><div class="emergency-desc">พยากรณ์อากาศและเตือนภัย</div></a>
+                <a href="tel:1111" class="emergency-card medium"><div class="emergency-number">1111</div><div class="emergency-name">สายด่วนรัฐบาล</div><div class="emergency-desc">ร้องเรียน ขอความช่วยเหลือจากรัฐ</div></a>
+                <a href="tel:1646" class="emergency-card low"><div class="emergency-number">1646</div><div class="emergency-name">สภากาชาดไทย</div><div class="emergency-desc">ความช่วยเหลือด้านมนุษยธรรม</div></a>
+              </div>
+            </div>
+
+          </div>          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h3 id="sosTitle">ส่งคำร้องขอความช่วยเหลือ SOS</h3>
+        <button class="icon-btn" id="closeSos" title="ปิด"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+      <form class="dialog-body" id="sosForm">
+        <div class="field"><label for="sosName">ชื่อผู้แจ้ง</label><input id="sosName" required placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field"><label for="sosLocation">ตำแหน่งหรือพิกัด</label><input id="sosLocation" required value="โซน C ซอยริมคลอง 4"></div>
+        <div class="field"><label for="sosDetail">รายละเอียดเหตุฉุกเฉิน</label><textarea id="sosDetail" required placeholder="จำนวนผู้ประสบภัย ระดับน้ำ ความเร่งด่วน"></textarea></div>
+        <button class="sos-btn" type="submit">ส่งพิกัดให้หน่วยกู้ภัย</button>
+      </form>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/bundle.js"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient('DatabaseLink','DatabaseKey');
+
+    function makeInitialsAvatar(text) {
+      const initial = (text || '?').charAt(0).toUpperCase();
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'auth.html'; return; }
+
+      const { data: profile } = await sb.from('profiles')
+        .select('username, display_name, avatar_url')
+        .eq('id', session.user.id)
+        .single();
+
+      const emailPrefix = session.user.email.split('@')[0];
+      const username    = profile?.username || emailPrefix;
+      const displayName = profile?.display_name || emailPrefix;
+
+      document.getElementById('sidebarDisplayName').textContent    = displayName;
+      document.getElementById('sidebarUsernameHandle').textContent = '@' + username;
+
+      if (profile?.avatar_url) {
+        const { data: urlData } = sb.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        document.getElementById('sidebarAvatarImg').src = urlData?.publicUrl || makeInitialsAvatar(username);
+      } else {
+        document.getElementById('sidebarAvatarImg').src = makeInitialsAvatar(username);
+      }
+    })();
+
+
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.learn-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.learn-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.learn-panel').forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+      });
+    });
+
+    function toggleProfileMenu(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('sidebarProfileMenu').classList.toggle('open');
+    }
+
+    document.addEventListener('click', () => {
+      document.getElementById('sidebarProfileMenu')?.classList.remove('open');
+    });
+
+    async function signOut() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+  </script>
+</body></html>
