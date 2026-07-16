@@ -46,7 +46,6 @@ def write_json(path: Path, value: Any) -> None:
 
 
 def cells() -> list[dict[str, float]]:
-    # 60 latitude rows x 33 longitude columns = 1,980 cells at the requested 0.25° resolution.
     lats = np.arange(settings.min_lat, settings.max_lat, settings.grid_step)
     lngs = np.arange(settings.min_lng, settings.max_lng, settings.grid_step)
     return [{"lat": round(float(lat + settings.grid_step / 2), 5), "lng": round(float(lng + settings.grid_step / 2), 5)} for lat in lats for lng in lngs]
@@ -74,8 +73,6 @@ def flood_pixel_ratio(image_bytes: bytes, px: int, py: int) -> float:
 
 
 async def fetch_json(client: httpx.AsyncClient, url: str, **kwargs: Any) -> Any:
-    # Open-Meteo public endpoints return 429 when coordinate batches arrive too
-    # quickly. Respect its back-off signal instead of re-running the whole job.
     for attempt in range(5):
         response = await client.get(url, **kwargs)
         if response.status_code != 429:
@@ -102,8 +99,7 @@ async def gistda_frequency(client: httpx.AsyncClient, grid: list[dict[str, float
     async def get_tile(x: int, y: int) -> tuple[tuple[int, int], bytes]:
         url = GISTDA_MAP.format(z=z, x=x, y=y)
         response = await client.get(url, headers=headers)
-        # Some WMTS services return 404 rather than a transparent tile where a
-        # layer has no coverage. For flood frequency that means a zero ratio.
+        
         if response.status_code == 404:
             transparent = Image.new("RGBA", (256, 256), (255, 255, 255, 0))
             buffer = io.BytesIO()
@@ -145,7 +141,7 @@ async def open_meteo(client: httpx.AsyncClient, grid: list[dict[str, float]]) ->
     if cached is not None:
         return cached
     result: dict[str, Any] = {}
-    # Both Open-Meteo APIs accept comma-separated coordinates, keeping this to 20 calls/API for 1,980 cells.
+   
     for start in range(0, len(grid), 100):
         batch = grid[start:start + 100]
         params = {"latitude": ",".join(str(c["lat"]) for c in batch), "longitude": ",".join(str(c["lng"]) for c in batch)}
@@ -160,7 +156,7 @@ async def open_meteo(client: httpx.AsyncClient, grid: list[dict[str, float]]) ->
             forecast = discharge[SEQUENCE_LENGTH:SEQUENCE_LENGTH + 7] or [history[-1]]
             mean = max(float(np.mean(history)), 0.01)
             result[cell_key(cell)] = {"rain": rain, "history": history, "current": history[-1], "mean30": mean, "max7": max(forecast)}
-        # One request per API per batch: pace public access and avoid 429 bursts.
+      
         await asyncio.sleep(2.5)
     write_json(daily_path("open_meteo"), result)
     return result
@@ -174,7 +170,7 @@ async def elevations(client: httpx.AsyncClient, grid: list[dict[str, float]]) ->
     result: dict[str, float] = {}
     for start in range(0, len(grid), 500):
         batch = grid[start:start + 500]
-        # POST is used as requested; fall back to Google's documented GET format if a project rejects POST.
+        
         payload = {"locations": [{"lat": c["lat"], "lng": c["lng"]} for c in batch], "key": settings.google_maps_api_key}
         response = await client.post(ELEVATION, json=payload)
         if response.status_code >= 400:
@@ -206,7 +202,7 @@ def build_sequences(grid: list[dict[str, float]], meteo: dict[str, Any], elev: d
             r7 = sum(observed_rain[max(0, pos - 6):pos + 1])
             rows.append([min(discharge / mean, 5) / 5, min(r3 / 150, 1), min(r7 / 300, 1), 1 - min(elev.get(key, 0) / maximum_elevation, 1), freq.get(key, 0.0)])
         sequences.append(rows)
-        # The requested historical label, weighted by the cell's discharge ratio.
+        
         labels.append(min(1.0, freq.get(key, 0.0) * min(data["current"] / mean, 2.0)))
     return np.asarray(sequences, dtype=np.float32), np.asarray(labels, dtype=np.float32)
 
@@ -223,7 +219,7 @@ def train_and_predict(sequence: np.ndarray, labels: np.ndarray, meteo: dict[str,
     settings.model_dir.mkdir(exist_ok=True)
     torch.save(model.state_dict(), settings.model_dir / "flood_lstm.pt")
     with torch.no_grad(): forecast = model(x).numpy()
-    # Current GIS flood polygons are an observed condition and should not be erased by a forecast model.
+   
     return [float(max(value, 0.85 if current.get(cell_key(c), False) else 0.0)) for value, c in zip(forecast, grid)]
 
 
