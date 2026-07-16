@@ -11,9 +11,7 @@
   <title>โปรไฟล์และโพสต์ของคุณ | FloodSense</title>
   
   <style>
-    /* ==========================================
-       สไตล์เฉพาะส่วนตั้งค่าโปรไฟล์สไตล์ Dribbble (View & Edit Mode)
-       ========================================== */
+
     .profile-card-wrapper {
       transition: all 0.3s ease;
     }
@@ -25,7 +23,7 @@
       padding: 32px;
     }
 
-    /* สไตล์สำหรับ View Mode (โชว์ข้อมูลแบบจัดหน้าสวยงาม) */
+   
     .profile-details-view {
       display: flex;
       flex-direction: column;
@@ -102,7 +100,7 @@
       color: var(--ink);
     }
 
-    /* ปุ่มดินสอแก้ไขโปรไฟล์ (Edit trigger button) */
+
     .edit-trigger-btn {
       display: inline-flex;
       align-items: center;
@@ -123,7 +121,7 @@
       transform: translateY(-1px);
     }
 
-    /* ตัวเลือกอัปโหลดรูปภาพโปรไฟล์ (Avatar Uploader) */
+    
     .avatar-upload-container {
       display: flex;
       flex-direction: column;
@@ -148,7 +146,7 @@
       transition: filter 0.3s ease;
     }
 
-    /* ส่วนปุ่มกล้องโฮเวอร์ (ใช้งานเฉพาะใน Edit Mode เท่านั้น) */
+   
     .avatar-preview-wrapper.editable {
       cursor: pointer;
     }
@@ -185,7 +183,7 @@
       display: none;
     }
 
-    /* จัดระเบียบช่องข้อมูลในตอนแก้ */
+  
     .profile-form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -224,7 +222,7 @@
     .unique-status.available { color: var(--safe); }
     .unique-status.taken { color: var(--danger); }
 
-    /* ปรับแต่งกลุ่มปุ่มตกลง-ยกเลิกแก้ไข */
+   
     .edit-actions-container {
       display: flex;
       justify-content: flex-end;
@@ -234,7 +232,7 @@
       padding-top: 16px;
     }
 
-    /* เอฟเฟกต์ Fade-In สำหรับเพิ่มความนุ่มนวลตอนสลับโหมด */
+  
     .fade-entrance {
       animation: tabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
@@ -250,9 +248,7 @@
       }
     }
 
-    /* ==========================================
-       ส่วนล่าง: Feed โพสต์ของผู้ใช้
-       ========================================== */
+  
     .posts-section {
       margin-top: 12px;
     }
@@ -344,7 +340,6 @@
       color: var(--ink);
     }
 
-    /* สไตล์สำหรับ Sidebar Profile Widget ด้านล่าง */
     .sidebar-profile-card {
       margin-top: auto;
       background: rgba(255, 255, 255, 0.06);
@@ -431,10 +426,7 @@
 </head>
 <body>
   <div class="app">
-    
-    <!-- ==========================================
-         ส่วนของเมนูด้านซ้าย (Sidebar)
-         ========================================== -->
+
     <aside class="sidebar" aria-label="เมนูหลัก">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -470,7 +462,7 @@
         </a>
       </nav>
 
-      <!-- ส่วนล่างสุดของ Sidebar: ปุ่มข้อมูลผู้ใช้ -->
+     
       <div class="sidebar-profile-wrapper">
         <a class="sidebar-profile-card" id="sidebarProfileCard">
           <div class="sidebar-avatar">
@@ -497,9 +489,8 @@
       </div>
     </aside>
 
-    <!-- ==========================================
-         ส่วนแสดงผลหลัก (Main Content)
-         ========================================== -->
+
+    
     <main class="main">
       <header class="topbar">
         <div>
@@ -515,7 +506,7 @@
 
       <section class="content">
         
-        <!-- ส่วนตั้งค่าโปรไฟล์ (Profiles Panel) -->
+      
         <section class="panel" id="profilePanel">
           <div class="panel-head">
             <div class="panel-title">
@@ -524,7 +515,7 @@
             </div>
           </div>
           
-          <!-- [1. VIEW MODE]: แสดงข้อมูลสวยงามสไตล์ Dribbble ยอดนิยม -->
+  
           <div class="profile-card-wrapper fade-entrance" id="profileViewMode">
             <div class="profile-setup-card">
               <div class="avatar-upload-container">
@@ -540,7 +531,7 @@
                     <h3 class="view-display-name" id="viewDisplayName">XXXX</h3>
                     <div class="view-username" id="viewUsername">@xxxx</div>
                   </div>
-                  <!-- ปุ่มดินสอเปิดโหมดแก้ไข [ตามที่คุณระบุ] -->
+                
                   <button type="button" class="edit-trigger-btn" onclick="enableEditMode()">
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                     <span>แก้ไขโปรไฟล์</span>
@@ -566,11 +557,10 @@
             </div>
           </div>
 
-          <!-- [2. EDIT MODE]: ฟอร์มแก้ไข (ซ่อนไว้เริ่มต้น เมื่อกดดินสอจะเปิดขึ้นมาแบบสมูท) -->
           <div class="profile-card-wrapper" id="profileEditMode" style="display: none;">
             <form class="profile-setup-card" onsubmit="saveProfile(event)">
               
-              <!-- กล่องแก้ไขรูปภาพแบบมี Overlay -->
+       
               <div class="avatar-upload-container">
                 <label for="avatarFileInput" class="avatar-preview-wrapper editable" title="กดเพื่อเปลี่ยนรูปโปรไฟล์">
                   <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%232d86bf%22/%3E%3Ctext x=%22150%22 y=%22175%22 font-size=%22140%22 fill=%22white%22 text-anchor=%22middle%22%3E%3F%3C/text%3E%3C/svg%3E" alt="ตัวอย่างรูปโปรไฟล์">
@@ -583,7 +573,7 @@
                 <span style="font-size: 0.72rem; color: var(--muted); text-align: center;">ขนาด 1:1 บันทึกลง<br>Supabase Storage</span>
               </div>
 
-              <!-- ส่วนฟอร์ม Input แก้ไข -->
+              
               <div class="profile-form-grid">
                 
                 <div class="field">
@@ -608,7 +598,7 @@
                   <textarea id="bioInput" placeholder="แนะนำสั้นๆ เพื่อให้ผู้ใช้คนอื่นทราบขอบเขตการทำงานของคุณ">อาสาสมัครป้องกันภัยพิบัติประจำพื้นที่อำเภอบางบาล คอยสแกนจุดอพยพ อัปเดตข้อมูลระดับน้ำในระบบเรียลไทม์ และประสานงานความช่วยเหลือผ่าน SOS Queue</textarea>
                 </div>
 
-                <!-- กลุ่มปุ่มล่างขวาของโหมดแก้ไข -->
+             
                 <div class="full-width edit-actions-container">
                   <button type="button" class="secondary" onclick="disableEditMode()">ยกเลิก</button>
                   <button type="submit" class="primary">บันทึกข้อมูลส่วนตัว</button>
@@ -618,7 +608,7 @@
           </div>
         </section>
 
-        <!-- ส่วนล่าง: แสดงรายการโพสต์ที่ผู้ใช้เคยแจ้งสถานการณ์ -->
+       
         <section class="posts-section">
           <div class="posts-header">
             <div>
@@ -639,11 +629,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- นำเข้าระบบควบคุมหลัก -->
+
   <script src="js/bundle.js"></script>
   
   <script>
-    // ส่วนตรวจวัดเวลาเรียลไทม์ใน Sidebar
+
     function updateLiveClock() {
       var el = document.getElementById('liveTime');
       if (el) el.textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
@@ -651,14 +641,12 @@
     updateLiveClock();
     setInterval(updateLiveClock, 30000);
 
-    // ==========================================
-    // ระบบสลับโหมด View -> Edit สไตล์ Dribbble ด้วยคลาส Fade
-    // ==========================================
+
     function enableEditMode() {
       const viewBlock = document.getElementById('profileViewMode');
       const editBlock = document.getElementById('profileEditMode');
 
-      // ซ่อน View Block และแสดง Edit Block พร้อมเพิ่ม Animation
+
       viewBlock.style.display = 'none';
       editBlock.style.display = 'block';
       editBlock.classList.add('fade-entrance');
@@ -668,12 +656,11 @@
       const viewBlock = document.getElementById('profileViewMode');
       const editBlock = document.getElementById('profileEditMode');
 
-      // ล้างข้อมูลฟอร์มให้กลับมาเป็นค่าล่าสุดที่บันทึกไว้ใน View Mode
+  
       document.getElementById('displayNameInput').value = document.getElementById('viewDisplayName').textContent;
       document.getElementById('usernameInput').value = document.getElementById('viewUsername').textContent.replace('@', '');
       document.getElementById('bioInput').value = document.getElementById('viewBio').textContent;
 
-      // สลับส่วนแสดงผลกลับมาเป็นโหมด View 
       editBlock.style.display = 'none';
       editBlock.classList.remove('fade-entrance');
       
@@ -681,9 +668,7 @@
       viewBlock.classList.add('fade-entrance');
     }
 
-    // ==========================================
-    // Supabase Config
-    // ==========================================
+   
     const { createClient } = supabase;
     const sb = createClient(
       'DatabaseLink',
@@ -692,9 +677,7 @@
 
     let currentUser = null;
 
-    // ==========================================
-    // Init: โหลดข้อมูล profile ถ้ามี session
-    // ==========================================
+
     function makeInitialsAvatar(text) {
       const initial = (text || '?').charAt(0).toUpperCase();
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#2d86bf"/><text x="150" y="175" font-size="140" font-family="Sarabun,sans-serif" font-weight="700" fill="white" text-anchor="middle">${initial}</text></svg>`;
@@ -723,7 +706,7 @@
       document.getElementById('viewBio').textContent         = bio;
       document.getElementById('sidebarDisplayName').textContent    = displayName || emailPrefix;
       document.getElementById('sidebarUsernameHandle').textContent = '@' + username;
-      // ดึง followers / following
+ 
       const [{ count: followers }, { count: following }] = await Promise.all([
         sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id),
         sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', currentUser.id)
@@ -753,9 +736,7 @@
       loadMyPosts();
     }
 
-    // ==========================================
-    // ประวัติโพสต์จริงของผู้ใช้ (จากตาราง posts)
-    // ==========================================
+
     function severityLabel(sev) {
       return { low: 'ความเสี่ยงต่ำ', medium: 'ปานกลาง', high: 'สูง', critical: 'ระดับวิกฤต' }[sev] || '';
     }
@@ -857,9 +838,7 @@
 
     initPage();
 
-    // ==========================================
-    // checkUsernameUnique — ตรวจสอบจาก Supabase จริง
-    // ==========================================
+ 
     let checkTimeout;
     async function checkUsernameUnique(username) {
       const statusEl = document.getElementById('usernameStatus');
@@ -891,15 +870,13 @@
       }, 400);
     }
 
-    // ==========================================
-    // saveProfile — บันทึกลง Supabase จริง
-    // ==========================================
+   
     let pendingAvatarFile = null;
 
     async function saveProfile(event) {
       event.preventDefault();
 
-      // ดึง session ใหม่ถ้า currentUser ยังว่าง
+
       if (!currentUser) {
         const { data: { session } } = await sb.auth.getSession();
         if (!session) { showSystemToast('กรุณาเข้าสู่ระบบก่อน'); return; }
@@ -924,7 +901,7 @@
 
       let avatar_url = null;
 
-      // อัปโหลดรูปถ้ามีการเลือกไฟล์ใหม่
+      
       if (pendingAvatarFile) {
         const ext  = pendingAvatarFile.name.split('.').pop();
         const path = `${currentUser.id}/avatar.${ext}`;
@@ -951,7 +928,7 @@
         return;
       }
 
-      // อัปเดต View Mode
+ 
       document.getElementById('viewDisplayName').textContent = displayName;
       document.getElementById('viewUsername').textContent    = '@' + username;
       document.getElementById('viewBio').textContent         = bio;
@@ -969,7 +946,7 @@
       showSystemToast('บันทึกข้อมูลสำเร็จ');
     }
 
-    // previewImage เก็บ file จริงไว้รอ upload
+   
     function previewImage(event) {
       const file = event.target.files[0];
       if (file) {
