@@ -13,9 +13,6 @@
   <title>ฟีดโพสต์ | FloodSense</title>
 
   <style>
-    /* ==========================================
-       Feed layout
-       ========================================== */
     .feed-layout {
       display: grid;
       grid-template-columns: 1fr 320px;
@@ -30,8 +27,6 @@
 
     .feed-main { display: flex; flex-direction: column; gap: 14px; }
 
-
-    /* FAB Composer */
     .fab-btn {
       position: fixed;
       bottom: 28px;
@@ -136,7 +131,6 @@
     }
     .composer-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Post card */
     .post-card {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -215,7 +209,6 @@
       border-radius: 999px; padding: 7px 16px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
     }
 
-    /* Right sidebar */
     .feed-side { display: flex; flex-direction: column; gap: 14px; }
     .side-panel {
       background: var(--panel);
@@ -306,7 +299,6 @@
 <body>
   <div class="app">
 
-    <!-- ========================================== Sidebar ========================================== -->
     <aside class="sidebar" aria-label="เมนูหลัก">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -315,7 +307,6 @@
         <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
       </div>
 
-    
       <nav class="nav">
         <p> ภาพรวม </p>
         <a  href="index.html" class="active" title="ภาพรวม">
@@ -334,7 +325,7 @@
         </a>
         <a href="chat.html" title="AI Chatbot">
           <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
-          AI ผู้ช่วย
+          AI ผู้ช่วย
         </a>
         <a href="learn.html" title="คู่มือ">
           <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
@@ -368,7 +359,6 @@
       </div>
     </aside>
 
-    <!-- ========================================== Main ========================================== -->
     <main class="main">
       <header class="topbar">
         <div>
@@ -385,15 +375,12 @@
       <section class="content">
         <div class="feed-layout">
 
-          <!-- ====== Feed main column ====== -->
           <div class="feed-main">
-            <!-- Feed list -->
             <div id="feedList">
               <div class="loading-feed">กำลังโหลดฟีด...</div>
             </div>
           </div>
 
-          <!-- ====== Right sidebar ====== -->
           <aside class="feed-side">
             <div class="side-panel">
               <h4>แนะนำให้ติดตาม</h4>
@@ -408,13 +395,10 @@
     </main>
   </div>
 
-
-  <!-- FAB -->
   <button class="fab-btn" id="fabBtn" title="โพสต์ใหม่">
     <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
   </button>
 
-  <!-- Composer Modal -->
   <div class="composer-modal-overlay" id="composerOverlay">
     <div class="composer-modal">
       <div class="composer-modal-head">
@@ -473,7 +457,6 @@
     </div>
   </div>
 
-  <!-- SOS Modal -->
   <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
     <div class="dialog">
       <div class="dialog-head">
@@ -502,7 +485,7 @@
     let currentUser = null;
     let currentProfile = null;
     let pendingImageFile = null;
-    let pendingLocation = null; // { lat, lng }
+    let pendingLocation = null;
 
     function makeInitialsAvatar(text) {
       const initial = (text || '?').charAt(0).toUpperCase();
@@ -541,9 +524,6 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // ==========================================
-    // Init
-    // ==========================================
     async function initPage() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'auth.html'; return; }
@@ -569,9 +549,6 @@
       loadSuggestedUsers();
     }
 
-    // ==========================================
-    // Composer behavior
-    // ==========================================
     const composerText = document.getElementById('composerText');
     const composerSubmitBtn = document.getElementById('composerSubmitBtn');
 
@@ -604,7 +581,6 @@
       updateSubmitState();
     });
 
-    // ---- Location Picker ----
     let acSvc, acToken;
 
     function setLocation(lat, lng, name) {
@@ -738,7 +714,6 @@
         }
       }
 
-      // reset composer
       composerText.value = '';
       pendingImageFile = null;
       pendingLocation = null;
@@ -754,9 +729,6 @@
       loadFeed();
     });
 
-    // ==========================================
-    // Load feed
-    // ==========================================
     async function loadFeed() {
       const feedList = document.getElementById('feedList');
 
@@ -887,7 +859,7 @@
       wrap.querySelector('.comment-toggle-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleComments(post.id, wrap); });
       wrap.querySelector('.comment-form').addEventListener('submit', (e) => { e.stopPropagation(); submitComment(e, post.id, wrap); });
       wrap.querySelector('.post-body-clickable').addEventListener('click', (e) => {
-        if (e.target.closest('a')) return; // ปล่อยให้ลิงก์ทำงานปกติ
+        if (e.target.closest('a')) return;
         window.location.href = `post.html?id=${post.id}`;
       });
       wrap.querySelector('.post-body-clickable').style.cursor = 'pointer';
@@ -901,9 +873,6 @@
       return div.innerHTML;
     }
 
-    // ==========================================
-    // Like toggle
-    // ==========================================
     async function toggleLike(postId, cardEl) {
       const btn = cardEl.querySelector('.like-btn');
       const countEl = btn.querySelector('.like-count');
@@ -922,9 +891,6 @@
       }
     }
 
-    // ==========================================
-    // Comments
-    // ==========================================
     async function toggleComments(postId, cardEl) {
       const panel = cardEl.querySelector(`#comments-${postId}`);
       const wasOpen = panel.classList.contains('open');
@@ -981,9 +947,6 @@
       await loadComments(postId, panel);
     }
 
-    // ==========================================
-    // Suggested users
-    // ==========================================
     async function loadSuggestedUsers() {
       const container = document.getElementById('suggestedUsers');
 
@@ -1031,9 +994,6 @@
       });
     }
 
-    // ==========================================
-    // Sidebar dropdown + signOut
-    // ==========================================
     function toggleProfileMenu(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -1047,7 +1007,6 @@
       window.location.href = 'auth.html';
     }
 
-    // FAB open/close
     document.getElementById('fabBtn').addEventListener('click', () => {
       document.getElementById('composerOverlay').classList.add('open');
       document.getElementById('composerText').focus();
