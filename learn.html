@@ -28,12 +28,10 @@
     .learn-panel { display: none; }
     .learn-panel.active { display: block; }
 
-    
     .learn-section-header { margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
     .learn-section-header h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; color: var(--ink); }
     .learn-section-header p { margin: 0; font-size: 0.82rem; color: var(--muted); }
 
-    
     .learn-article { margin-bottom: 28px; }
     .learn-article:last-child { margin-bottom: 0; }
     .learn-article-title {
@@ -60,7 +58,6 @@
     .learn-item-dot.danger { background: var(--danger); }
     .learn-item strong { color: var(--ink); }
 
-    
     .emergency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
     .emergency-card {
       border: 1px solid var(--line); border-radius: 10px;
@@ -106,7 +103,7 @@
         </div>
         <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
       </div>
-      
+
       <nav class="nav">
         <p> ภาพรวม </p>
         <a href="index.html" title="ภาพรวม"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Dashboard</a>
@@ -152,7 +149,6 @@
       <section class="content">
         <div class="learn-layout">
 
-          
           <div class="learn-tabs">
             <button class="learn-tab active" data-tab="before">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
@@ -180,10 +176,8 @@
             </button>
           </div>
 
-          
           <div class="learn-content-area">
 
-            
             <div class="learn-panel active" id="tab-before">
               <div class="learn-section-header">
                 <h3>ก่อนน้ำมา — การเตรียมพร้อม</h3>
@@ -225,7 +219,6 @@
               </div>
             </div>
 
-            
             <div class="learn-panel" id="tab-during">
               <div class="learn-section-header">
                 <h3>ระหว่างน้ำท่วม</h3>
@@ -266,7 +259,6 @@
               </div>
             </div>
 
-            
             <div class="learn-panel" id="tab-evacuate">
               <div class="learn-section-header">
                 <h3>การอพยพ</h3>
@@ -302,7 +294,6 @@
               </div>
             </div>
 
-            
             <div class="learn-panel" id="tab-shelter">
               <div class="learn-section-header">
                 <h3>ศูนย์พักพิง</h3>
@@ -334,7 +325,6 @@
               </div>
             </div>
 
-            
             <div class="learn-panel" id="tab-after">
               <div class="learn-section-header">
                 <h3>หลังน้ำลด</h3>
@@ -369,7 +359,6 @@
               </div>
             </div>
 
-            
             <div class="learn-panel" id="tab-emergency">
               <div class="learn-section-header">
                 <h3>เบอร์ฉุกเฉินและหน่วยงานที่เกี่ยวข้อง</h3>
@@ -444,8 +433,6 @@
       }
     })();
 
-
-    
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.learn-tab').forEach(tab => {
         tab.addEventListener('click', () => {
