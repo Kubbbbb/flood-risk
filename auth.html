@@ -9,8 +9,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="css/style.css">
   <title>เข้าสู่ระบบและสมัครสมาชิก | FloodSense</title>
-
+  
   <style>
+    
     .dribbble-layout {
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
@@ -18,6 +19,7 @@
       background: var(--surface);
     }
 
+    
     .hero-side {
       background: radial-gradient(circle at 15% 20%, #153c4d 0%, #07161f 100%);
       padding: 56px;
@@ -29,6 +31,7 @@
       color: #ffffff;
     }
 
+    
     .hero-side::before {
       content: '';
       position: absolute;
@@ -52,6 +55,7 @@
       pointer-events: none;
     }
 
+    
     .hero-header {
       display: flex;
       align-items: center;
@@ -71,6 +75,7 @@
       color: #a9c8d1;
     }
 
+    
     .hero-center {
       margin: auto 0;
       z-index: 5;
@@ -90,6 +95,7 @@
       margin-bottom: 40px;
     }
 
+    
     .glass-widget {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(16px);
@@ -131,6 +137,7 @@
       box-shadow: 0 0 0 4px rgba(67, 211, 153, 0.25);
     }
 
+    
     .mockup-graph {
       height: 100px;
       width: 100%;
@@ -163,6 +170,7 @@
       z-index: 5;
     }
 
+    
     .form-side {
       background: var(--panel);
       display: flex;
@@ -192,6 +200,7 @@
       font-size: 0.88rem;
     }
 
+    
     .social-btn {
       width: 100%;
       min-height: 46px;
@@ -230,6 +239,7 @@
     .divider:not(:empty)::before { margin-right: .75em; }
     .divider:not(:empty)::after { margin-left: .75em; }
 
+    
     .form-segmented {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -239,6 +249,7 @@
       min-height: 38px;
     }
 
+    
     .auth-form {
       display: none;
       flex-direction: column;
@@ -248,6 +259,7 @@
       display: flex;
     }
 
+    
     .input-shell {
       position: relative;
       display: flex;
@@ -285,6 +297,7 @@
       stroke-width: 2;
     }
 
+    
     .field-options {
       display: flex;
       align-items: center;
@@ -313,6 +326,7 @@
       text-decoration: underline;
     }
 
+    
     .primary-glow-btn {
       min-height: 46px;
       background: linear-gradient(135deg, var(--deep) 0%, #17526b 100%);
@@ -332,6 +346,7 @@
       box-shadow: 0 12px 24px rgba(17, 68, 90, 0.25);
     }
 
+    
     @media (max-width: 960px) {
       .dribbble-layout {
         grid-template-columns: 1fr;
@@ -341,45 +356,68 @@
       }
       .form-side {
         padding: 40px 24px;
+        min-height: 100vh;
       }
     }
 
-    .form-segmented button {
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: transform, background-color, box-shadow;
-    }
-
-    .auth-form {
-      display: none;
-      flex-direction: column;
-      gap: 16px;
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    @keyframes fluidEntrance {
-      0% {
-        opacity: 0;
-        transform: translateY(12px);
+    @media (max-width: 480px) {
+      .hero-side { display: none; }
+      .form-side {
+        padding: 24px 16px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
+      .form-card {
+        padding: 24px 16px;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
       }
+      .form-logo { margin-bottom: 20px; }
+      .form-segmented { margin-bottom: 20px; }
     }
 
-    .auth-form.active {
-      display: flex;
-      animation: fluidEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
+    
+
+.form-segmented button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, background-color, box-shadow;
+}
+
+.auth-form {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fluidEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-form.active {
+  display: flex;
+  animation: fluidEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
   </style>
 </head>
 <body>
 
   <div class="dribbble-layout">
-
+    
+    
     <section class="hero-side" aria-label="ข้อมูลสถานการณ์แพลตฟอร์ม">
-
+      
+      
       <div class="hero-header">
         <div class="brand-mark" aria-hidden="true" style="width: 44px; height: 44px;">
           <svg viewBox="0 0 32 32"><path d="M16 4C11 10 7 15 7 20a9 9 0 0 0 18 0c0-5-4-10-9-16Z" fill="rgba(255,255,255,.28)" stroke="white"></path><path d="M10 21c3 2 5 2 8 0s5-2 8 0" stroke="white"></path></svg>
@@ -390,22 +428,25 @@
         </div>
       </div>
 
+      
       <div class="hero-center">
         <h2>แพลตฟอร์มจัดการ<br>อุทกภัยอัจฉริยะแบบเรียลไทม์</h2>
         <p>วิเคราะห์ข้อมูลพยากรณ์ล่วงหน้าด้วยระบบ AI (LSTM) ตรวจสอบเส้นทางหลีกเลี่ยงน้ำท่วมด้วย GIS และเข้าถึงการช่วยเหลือเร่งด่วน</p>
-
+        
+        
         <div class="glass-widget">
           <div class="widget-title">
             <div>
-              <h3 style="margin: 0; font-size: 0.95rem;">พื้นที่เสี่ยงอุทกภัย: จังหวัดขอนแก่น</h3>
-              <p style="margin: 3px 0 0 0; font-size: 0.72rem; color: #a6c0c8;">คาดการณ์โดยโมเดลคาดการณ์พื้นที่เสี่ยงอุทกภัย</p>
+              <h3 style="margin: 0; font-size: 0.95rem;">สถานีวัดระดับน้ำ: ป่าสัก (PAS-04)</h3>
+              <p style="margin: 3px 0 0 0; font-size: 0.72rem; color: #a6c0c8;">พิกัดตรวจวัดโดย GISTDA Sphere API</p>
             </div>
             <div class="widget-badge">
               <span class="pulse-dot-green"></span>
               <span>เรียลไทม์ (Live)</span>
             </div>
           </div>
-
+          
+          
           <div class="mockup-graph">
             <svg viewBox="0 0 400 100" style="width:100%; height:100%; overflow:visible;">
               <defs>
@@ -414,10 +455,13 @@
                   <stop offset="100%" stop-color="#43d399" stop-opacity="0"/>
                 </linearGradient>
               </defs>
+              
               <path d="M 0 60 Q 50 70 100 45 T 200 40 T 300 18 T 400 12 L 400 100 L 0 100 Z" fill="url(#chartGrad)" />
               <path d="M 0 60 Q 50 70 100 45 T 200 40 T 300 18 T 400 12" fill="none" stroke="#43d399" stroke-width="3" stroke-linecap="round" />
+              
               <circle cx="300" cy="18" r="4" fill="#ffffff" stroke="#43d399" stroke-width="2"/>
               <circle cx="400" cy="12" r="5" fill="#e0a11b" />
+              
               <text x="270" y="38" fill="#a6c0c8" font-size="10" font-family="Sarabun">LSTM คาดการณ์</text>
             </svg>
           </div>
@@ -439,19 +483,23 @@
         </div>
       </div>
 
+      
       <div class="hero-footer-note">
         <p>© 2026 FloodSense Platform. ข้อมูลทั้งหมดประมวลผลผ่านโมเดลปัญญาประดิษฐ์และโครงข่าย GIS ร่วมกับข้อมูลสถิติของประเทศ</p>
       </div>
     </section>
 
+    
     <main class="form-side">
       <div class="form-container">
-
+        
+        
         <div class="form-title">
           <h3>ยินดีต้อนรับสู่ FloodSense</h3>
           <p>เข้าใช้งานระบบเพื่อเข้าถึงแผนที่อุทกภัยและ Dynamic Routing</p>
         </div>
 
+        
         <button type="button" class="social-btn">
           <svg viewBox="0 0 24 24" width="18" height="18">
             <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.51 15.01 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.26 7.46 8.92 5.04 12 5.04z"/>
@@ -464,11 +512,13 @@
 
         <div class="divider">หรือดำเนินต่อด้วยอีเมล</div>
 
+        
         <div class="segmented form-segmented">
           <button type="button" id="tabLogin" class="active" onclick="switchTab('login')">เข้าสู่ระบบ</button>
           <button type="button" id="tabRegister" onclick="switchTab('register')">สมัครสมาชิก</button>
         </div>
 
+        
         <form id="loginForm" class="auth-form active">
           <div class="field">
             <label for="loginEmail">อีเมล หรือ ชื่อผู้ใช้งาน</label>
@@ -504,6 +554,7 @@
           </button>
         </form>
 
+        
         <form id="registerForm" class="auth-form">
           <div class="field">
             <label for="regName">ชื่อ - นามสกุล</label>
@@ -548,6 +599,7 @@
           </button>
         </form>
 
+        
         <div class="auth-footer" style="margin-top: 32px; font-size: 0.8rem; text-align: center; color: var(--muted);">
           <p>กลับไปยัง <a href="index.html" style="color: var(--river); text-decoration: none; font-weight: 500;">หน้าแรกแดชบอร์ด</a> | หรือเข้าอ่าน <a href="learn.html" style="color: var(--river); text-decoration: none; font-weight: 500;">คู่มือการเอาตัวรอด</a></p>
         </div>
@@ -559,6 +611,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  
   <script>
     function switchTab(tab) {
     const tabLogin = document.getElementById('tabLogin');
@@ -567,30 +620,35 @@
     const registerForm = document.getElementById('registerForm');
 
     if (tab === 'login') {
+      
       tabLogin.classList.add('active');
       tabRegister.classList.remove('active');
-
+      
+      
       registerForm.classList.remove('active');
       loginForm.classList.add('active');
-
+      
       document.title = "เข้าสู่ระบบ | FloodSense";
     } else {
+      
       tabLogin.classList.remove('active');
       tabRegister.classList.add('active');
-
+      
+      
       loginForm.classList.remove('active');
       registerForm.classList.add('active');
-
+      
       document.title = "ลงทะเบียนเพื่อความปลอดภัย | FloodSense";
     }
   }
 
   const { createClient } = supabase;
   const sb = createClient(
-    'DatabaseLink',
-    'DatabaseKey'
+    'DatabaseLink',       
+    'DatabaseKey'                    
   );
 
+  
   document.querySelector('.social-btn').addEventListener('click', async () => {
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
@@ -599,6 +657,7 @@
     if (error) showToast(error.message);
   });
 
+  
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email    = document.getElementById('loginEmail').value;
@@ -612,6 +671,7 @@
     }
   });
 
+  
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name     = document.getElementById('regName').value;
@@ -622,7 +682,7 @@
       email,
       password,
       options: {
-        data: { full_name: name }
+        data: { full_name: name }   
       }
     });
 
@@ -633,6 +693,7 @@
     }
   });
 
+  
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
