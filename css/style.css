@@ -982,6 +982,21 @@ select {
     padding: 14px;
   }
 
+  /* hamburger mode — ถ้า sidebar มี class .hamburger-mode ให้ fixed แทน */
+  .sidebar.hamburger-mode {
+    position: fixed !important;
+    left: -280px !important;
+    top: 0 !important; bottom: 0 !important;
+    height: 100vh !important;
+    width: 260px !important;
+    z-index: 580 !important;
+    transition: left 0.25s ease !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.4) !important;
+  }
+  .sidebar.hamburger-mode.open {
+    left: 0 !important;
+  }
+
   .nav {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
