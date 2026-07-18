@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey &libraries=places&language=th&region=TH"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey&libraries=places&language=th&region=TH"></script>
   <title>ศูนย์พักพิง | FloodSense</title>
   <style>
     .sidebar-profile-wrapper { position: relative; display: flex; align-items: center; gap: 4px; margin-top: auto; }
@@ -28,7 +28,7 @@
     .sidebar-menu-item.danger { color: #f87171; }
     .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
 
-
+    
     .shelter-layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: start; }
     @media (max-width: 900px) { .shelter-layout { grid-template-columns: 1fr; } }
 
@@ -76,7 +76,7 @@
     }
     .shelter-edit-btn:hover { background: rgba(45,134,191,0.08); }
 
-
+    
     .shelter-form-panel {
       background: var(--panel); border: 1px solid var(--line);
       border-radius: 12px; padding: 18px; position: sticky; top: 20px;
@@ -110,11 +110,79 @@
     }
     .submit-btn:hover { background: #1a6a9e; }
     .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    
+    .fab-add-shelter {
+      display: none;
+      position: fixed; bottom: 24px; right: 24px; z-index: 300;
+      background: var(--river); color: #fff;
+      border: none; border-radius: 999px;
+      padding: 14px 20px; font-family: inherit;
+      font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      align-items: center; gap: 8px;
+    }
+    .fab-add-shelter svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+    
+    .shelter-form-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 400;
+      align-items: flex-end; justify-content: center;
+    }
+    .shelter-form-modal.open { display: flex; }
+    .shelter-form-modal .shelter-form-panel {
+      width: 100%; max-height: 90vh; overflow-y: auto;
+      border-radius: 20px 20px 0 0; position: static;
+    }
+    .shelter-form-modal-close {
+      float: right; background: none; border: none;
+      font-size: 1.2rem; cursor: pointer; color: var(--muted); padding: 0 4px;
+    }
+
+    @media (max-width: 768px) {
+      .fab-add-shelter { display: flex !important; }
+      .shelter-layout { grid-template-columns: 1fr !important; }
+      .shelter-layout > .shelter-form-panel { display: none !important; }
+    }
     .empty-shelters { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.88rem; }
+
+    .hamburger-btn {
+      display: none;
+      position: fixed; top: 14px; left: 14px; z-index: 600;
+      width: 38px; height: 38px; border-radius: 10px;
+      background: transparent; border: none; cursor: pointer;
+      align-items: center; justify-content: center;
+      box-shadow: none;
+    }
+    .hamburger-btn svg { width: 18px; height: 18px; stroke: #0f1e2a; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .hamburger-btn.open { background: rgba(0,0,0,0.3); }
+    .hamburger-btn.open svg { stroke: #fff; }
+
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 570;
+      pointer-events: auto;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex !important; }
+      .main { width: 100% !important; }
+      .topbar { padding-left: 60px !important; }
+    }
   </style>
 </head>
 <body>
   <div class="app">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="เมนู">
+      <svg viewBox="0 0 24 24">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <aside class="sidebar" aria-label="เมนูหลัก">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -160,20 +228,15 @@
           <h2>ศูนย์พักพิง</h2>
           <p>รายชื่อศูนย์อพยพที่ชุมชนรายงานไว้</p>
         </div>
-        <div class="top-actions">
-          <button class="sos-btn" id="openSos">
-            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
-          </button>
-        </div>
       </header>
 
       <section class="content">
         <div class="shelter-layout">
-     
+          
           <div>
             <div id="shelterList"><div class="empty-shelters">กำลังโหลด...</div></div>
           </div>
-        
+          
           <div class="shelter-form-panel">
             <h3>➕ เพิ่มศูนย์พักพิง</h3>
             <form id="shelterForm">
@@ -223,25 +286,54 @@
           </div>
         </div>
       </section>
+
+    
+    <button class="fab-add-shelter" id="fabAddShelter">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      เพิ่มศูนย์พักพิง
+    </button>
+
+    
+    <div class="shelter-form-modal" id="shelterFormModal">
+      <div class="shelter-form-panel">
+        <h3>
+          <button class="shelter-form-modal-close" id="closeFormModal">✕</button>
+          ➕ เพิ่มศูนย์พักพิง
+        </h3>
+        <form id="shelterFormMobile">
+          <div class="form-field"><label>ชื่อศูนย์ *</label><input id="sNameM" placeholder="เช่น วัดหนองแวง" required></div>
+          <div class="form-field"><label>ที่อยู่ / รายละเอียด</label><textarea id="sDescM" placeholder="ที่อยู่ สิ่งอำนวยความสะดวก ฯลฯ"></textarea></div>
+          <div class="form-field">
+            <label>ค้นหาตำแหน่ง *</label>
+            <div class="location-search-wrap">
+              <input id="sLocationSearchM" placeholder="พิมพ์ชื่อสถานที่..." autocomplete="off">
+              <div class="location-ac" id="sLocationAcM" style="display:none;"></div>
+            </div>
+            <div class="location-selected" id="sLocationSelectedM"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>ความจุ (คน)</label><input id="sCapacityM" type="number" min="0" placeholder="100"></div>
+            <div class="form-field"><label>มีผู้พักอยู่แล้ว</label><input id="sCurrentM" type="number" min="0" placeholder="0"></div>
+          </div>
+          <div class="form-field">
+            <label>สถานะ</label>
+            <select id="sStatusM"><option value="open">เปิดรับ</option><option value="full">เต็มแล้ว</option><option value="closed">ปิดแล้ว</option></select>
+          </div>
+          <div class="form-field">
+            <label>รองรับ</label>
+            <div class="form-checkboxes">
+              <label class="form-checkbox"><input type="checkbox" id="sPetsM"> สัตว์เลี้ยง</label>
+              <label class="form-checkbox"><input type="checkbox" id="sElderlyM"> ผู้สูงอายุ</label>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn" id="shelterSubmitBtnM">บันทึกศูนย์พักพิง</button>
+        </form>
+      </div>
+    </div>
     </main>
   </div>
 
-  <div class="modal" id="sosModal" role="dialog" aria-modal="true">
-    <div class="dialog">
-      <div class="dialog-head">
-        <h3>ส่งคำร้องขอความช่วยเหลือ SOS</h3>
-        <button class="icon-btn" id="closeSos"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
-      </div>
-      <form class="dialog-body" id="sosForm">
-        <div class="field"><label for="sosName">ชื่อผู้แจ้ง</label><input id="sosName" required placeholder="ชื่อ-นามสกุล"></div>
-        <div class="field"><label for="sosLocation">ตำแหน่ง</label><input id="sosLocation" required></div>
-        <div class="field"><label for="sosDetail">รายละเอียด</label><textarea id="sosDetail" required placeholder="จำนวนผู้ประสบภัย ระดับน้ำ ความเร่งด่วน"></textarea></div>
-        <button class="sos-btn" type="submit">ส่งพิกัดให้หน่วยกู้ภัย</button>
-      </form>
-    </div>
-  </div>
-
- 
+  
   <div class="modal" id="editShelterModal" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:center;justify-content:center;">
     <div class="dialog" style="max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">
       <div class="dialog-head">
@@ -386,7 +478,7 @@
       else { showToast('ลบแล้ว'); loadShelters(); }
     }
 
- 
+    
     let acDebounce;
     document.getElementById('sLocationSearch').addEventListener('input', (e) => {
       clearTimeout(acDebounce);
@@ -457,7 +549,7 @@
       btn.disabled = false; btn.textContent = 'บันทึกศูนย์พักพิง';
       if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message); return; }
 
-
+      
       document.getElementById('shelterForm').reset();
       selectedLat = selectedLng = null;
       document.getElementById('sLocationSelected').textContent = '';
@@ -465,9 +557,8 @@
       loadShelters();
     });
 
-
     function openEditShelter(id) {
-    
+      
       sb.from('shelters').select('*').eq('id', id).single().then(({ data: s }) => {
         if (!s) return;
         document.getElementById('editShelterId').value = s.id;
@@ -524,6 +615,155 @@
     async function signOut() { await sb.auth.signOut(); window.location.href = 'auth.html'; }
 
     init();
+
+  document.addEventListener('DOMContentLoaded', () => {
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  function applyMobileStyle() {
+    if (window.innerWidth <= 768) {
+      sidebar.style.setProperty('position', 'fixed', 'important');
+      sidebar.style.setProperty('left', '0', 'important');
+      sidebar.style.setProperty('top', '0', 'important');
+      sidebar.style.setProperty('bottom', '0', 'important');
+      sidebar.style.setProperty('height', '100vh', 'important');
+      sidebar.style.setProperty('width', '260px', 'important');
+      sidebar.style.setProperty('z-index', '580', 'important');
+      sidebar.style.setProperty('box-shadow', '4px 0 24px rgba(0,0,0,0.4)', 'important');
+      sidebar.style.setProperty('overflow-y', 'auto', 'important');
+      sidebar.style.setProperty('padding-top', '60px', 'important');
+      sidebar.style.setProperty('transition', 'transform 0.25s ease', 'important');
+      sidebar.style.transform = 'translateX(-280px)';
+      const nav = sidebar.querySelector('.nav');
+      if (nav) {
+        nav.style.setProperty('display', 'flex', 'important');
+        nav.style.setProperty('flex-direction', 'column', 'important');
+        nav.style.setProperty('gap', '4px', 'important');
+        nav.style.setProperty('grid-template-columns', 'unset', 'important');
+      }
+    } else {
+      sidebar.style.cssText = '';
+      const nav = sidebar.querySelector('.nav');
+      if (nav) nav.style.cssText = '';
+      hamburgerBtn.classList.remove('open');
+    }
+  }
+
+  applyMobileStyle();
+  window.addEventListener('resize', applyMobileStyle);
+
+  function openSidebar() {
+    sidebar.style.transform = 'translateX(0)';
+    overlay.classList.add('open');
+    hamburgerBtn.classList.add('open');
+  }
+  function closeSidebar() {
+    sidebar.style.transform = 'translateX(-280px)';
+    overlay.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
+  }
+
+  hamburgerBtn.addEventListener('click', () => {
+    if (hamburgerBtn.classList.contains('open')) closeSidebar();
+    else openSidebar();
+  });
+  overlay.addEventListener('click', closeSidebar);
+  document.querySelectorAll('.nav a').forEach(a => {
+    a.addEventListener('click', closeSidebar);
+  });
+});
+
+    
+    const fabBtn = document.getElementById('fabAddShelter');
+    const formModal = document.getElementById('shelterFormModal');
+    const closeModal = document.getElementById('closeFormModal');
+    let selectedLatM = null, selectedLngM = null;
+    let acSvcM = null, acTokenM = null;
+
+    if (fabBtn) {
+      fabBtn.addEventListener('click', () => { formModal.classList.add('open'); });
+      closeModal.addEventListener('click', () => formModal.classList.remove('open'));
+      formModal.addEventListener('click', (e) => { if (e.target === formModal) formModal.classList.remove('open'); });
+    }
+
+    
+    let acDebounceM;
+    const locSearchM = document.getElementById('sLocationSearchM');
+    if (locSearchM) {
+      locSearchM.addEventListener('input', (e) => {
+        clearTimeout(acDebounceM);
+        const val = e.target.value.trim();
+        const dd = document.getElementById('sLocationAcM');
+        if (val.length < 2) { dd.style.display = 'none'; return; }
+        dd.style.display = 'block';
+        dd.innerHTML = '<div class="location-ac-item" style="color:var(--muted)">กำลังค้นหา...</div>';
+        acDebounceM = setTimeout(() => {
+          if (!window.google) return;
+          if (!acSvcM) acSvcM = new google.maps.places.AutocompleteService();
+          if (!acTokenM) acTokenM = new google.maps.places.AutocompleteSessionToken();
+          acSvcM.getPlacePredictions({ input: val, sessionToken: acTokenM, componentRestrictions: { country: 'TH' }, language: 'th' }, (preds, status) => {
+            dd.innerHTML = '';
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !preds) {
+              dd.innerHTML = '<div class="location-ac-item" style="color:var(--muted)">ไม่พบสถานที่</div>'; return;
+            }
+            preds.forEach(p => {
+              const item = document.createElement('div');
+              item.className = 'location-ac-item';
+              item.innerHTML = `<div class="location-ac-main">${p.structured_formatting.main_text}</div><div class="location-ac-sub">${p.structured_formatting.secondary_text || ''}</div>`;
+              item.addEventListener('mousedown', (ev) => {
+                ev.preventDefault();
+                const div = document.createElement('div');
+                new google.maps.places.PlacesService(div).getDetails(
+                  { placeId: p.place_id, fields: ['geometry','name'], sessionToken: acTokenM },
+                  (place, st) => {
+                    if (st === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                      selectedLatM = place.geometry.location.lat();
+                      selectedLngM = place.geometry.location.lng();
+                      locSearchM.value = place.name;
+                      document.getElementById('sLocationSelectedM').textContent = `📍 ${selectedLatM.toFixed(5)}, ${selectedLngM.toFixed(5)}`;
+                      acTokenM = new google.maps.places.AutocompleteSessionToken();
+                    }
+                  }
+                );
+                dd.style.display = 'none';
+              });
+              dd.appendChild(item);
+            });
+          });
+        }, 300);
+      });
+    }
+
+    
+    const shelterFormMobile = document.getElementById('shelterFormMobile');
+    if (shelterFormMobile) {
+      shelterFormMobile.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!selectedLatM || !selectedLngM) { showToast('กรุณาเลือกตำแหน่งจากรายการค้นหา'); return; }
+        const btn = document.getElementById('shelterSubmitBtnM');
+        btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+        const { error } = await sb.from('shelters').insert({
+          user_id: currentUser.id,
+          name: document.getElementById('sNameM').value.trim(),
+          description: document.getElementById('sDescM').value.trim() || null,
+          latitude: selectedLatM, longitude: selectedLngM,
+          capacity: parseInt(document.getElementById('sCapacityM').value) || 0,
+          current_count: parseInt(document.getElementById('sCurrentM').value) || 0,
+          status: document.getElementById('sStatusM').value,
+          accepts_pets: document.getElementById('sPetsM').checked,
+          accepts_elderly: document.getElementById('sElderlyM').checked,
+        });
+        btn.disabled = false; btn.textContent = 'บันทึกศูนย์พักพิง';
+        if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message); return; }
+        shelterFormMobile.reset();
+        selectedLatM = selectedLngM = null;
+        document.getElementById('sLocationSelectedM').textContent = '';
+        formModal.classList.remove('open');
+        showToast('บันทึกศูนย์พักพิงแล้ว');
+        loadShelters();
+      });
+    }
   </script>
 </body>
 </html>
