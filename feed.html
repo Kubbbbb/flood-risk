@@ -8,11 +8,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey &libraries=places&language=th&region=TH"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey &libraries=places&language=th&region=TH"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey&libraries=places&language=th&region=TH"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GoogleMapsKey&libraries=places&language=th&region=TH"></script>
   <title>ฟีดโพสต์ | FloodSense</title>
 
   <style>
+    
     .feed-layout {
       display: grid;
       grid-template-columns: 1fr 320px;
@@ -22,11 +23,12 @@
 
     @media (max-width: 980px) {
       .feed-layout { grid-template-columns: 1fr; }
-      .feed-side { display: none; }
+      .feed-side { display: none !important; }
     }
 
     .feed-main { display: flex; flex-direction: column; gap: 14px; }
 
+    
     .fab-btn {
       position: fixed;
       bottom: 28px;
@@ -131,6 +133,7 @@
     }
     .composer-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    
     .post-card {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -209,6 +212,7 @@
       border-radius: 999px; padding: 7px 16px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
     }
 
+    
     .feed-side { display: flex; flex-direction: column; gap: 14px; }
     .side-panel {
       background: var(--panel);
@@ -294,11 +298,46 @@
     .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
     .sidebar-menu-item.danger { color: #f87171; }
     .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+
+    .hamburger-btn {
+      display: none;
+      position: fixed; top: 14px; left: 14px; z-index: 600;
+      width: 38px; height: 38px; border-radius: 10px;
+      background: transparent; border: none; cursor: pointer;
+      align-items: center; justify-content: center;
+      box-shadow: none;
+    }
+    .hamburger-btn svg { width: 18px; height: 18px; stroke: #0f1e2a; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .hamburger-btn.open { background: rgba(0,0,0,0.3); }
+    .hamburger-btn.open svg { stroke: #fff; }
+
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 570;
+      pointer-events: auto;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex !important; }
+      .main { width: 100% !important; }
+      .topbar { padding-left: 60px !important; }
+    }
   </style>
 </head>
 <body>
   <div class="app">
 
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="เมนู">
+      <svg viewBox="0 0 24 24">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    
     <aside class="sidebar" aria-label="เมนูหลัก">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -307,6 +346,7 @@
         <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
       </div>
 
+    
       <nav class="nav">
         <p> ภาพรวม </p>
         <a  href="index.html" class="active" title="ภาพรวม">
@@ -325,7 +365,7 @@
         </a>
         <a href="chat.html" title="AI Chatbot">
           <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg>
-          AI ผู้ช่วย
+          AI ผู้ช่วย
         </a>
         <a href="learn.html" title="คู่มือ">
           <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"></path></svg>
@@ -359,28 +399,27 @@
       </div>
     </aside>
 
+    
     <main class="main">
       <header class="topbar">
         <div>
           <h2>ฟีดชุมชน</h2>
           <p>โพสต์ขอความช่วยเหลือและอัปเดตสถานการณ์น้ำท่วมจากผู้ใช้ในพื้นที่</p>
         </div>
-        <div class="top-actions">
-          <button class="sos-btn" id="openSos">
-            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
-          </button>
-        </div>
       </header>
 
       <section class="content">
         <div class="feed-layout">
 
+          
           <div class="feed-main">
+            
             <div id="feedList">
               <div class="loading-feed">กำลังโหลดฟีด...</div>
             </div>
           </div>
 
+          
           <aside class="feed-side">
             <div class="side-panel">
               <h4>แนะนำให้ติดตาม</h4>
@@ -395,10 +434,12 @@
     </main>
   </div>
 
+  
   <button class="fab-btn" id="fabBtn" title="โพสต์ใหม่">
     <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
   </button>
 
+  
   <div class="composer-modal-overlay" id="composerOverlay">
     <div class="composer-modal">
       <div class="composer-modal-head">
@@ -457,6 +498,7 @@
     </div>
   </div>
 
+  
   <div class="modal" id="sosModal" role="dialog" aria-modal="true" aria-labelledby="sosTitle">
     <div class="dialog">
       <div class="dialog-head">
@@ -485,7 +527,7 @@
     let currentUser = null;
     let currentProfile = null;
     let pendingImageFile = null;
-    let pendingLocation = null;
+    let pendingLocation = null; 
 
     function makeInitialsAvatar(text) {
       const initial = (text || '?').charAt(0).toUpperCase();
@@ -524,6 +566,9 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    
+    
+    
     async function initPage() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'auth.html'; return; }
@@ -549,6 +594,9 @@
       loadSuggestedUsers();
     }
 
+    
+    
+    
     const composerText = document.getElementById('composerText');
     const composerSubmitBtn = document.getElementById('composerSubmitBtn');
 
@@ -581,6 +629,7 @@
       updateSubmitState();
     });
 
+    
     let acSvc, acToken;
 
     function setLocation(lat, lng, name) {
@@ -606,7 +655,7 @@
       document.getElementById('locationGpsBtn').style.opacity = '0.4';
       navigator.geolocation.getCurrentPosition((pos) => {
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
-        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=GoogleMapsKey &language=th`)
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=GoogleMapsKey&language=th`)
           .then(r => r.json()).then(data => {
             const comp = data.results?.[0]?.address_components || [];
             const sub = comp.find(x => x.types.includes('sublocality_level_1') || x.types.includes('sublocality'));
@@ -714,6 +763,7 @@
         }
       }
 
+      
       composerText.value = '';
       pendingImageFile = null;
       pendingLocation = null;
@@ -729,6 +779,9 @@
       loadFeed();
     });
 
+    
+    
+    
     async function loadFeed() {
       const feedList = document.getElementById('feedList');
 
@@ -792,7 +845,7 @@
           <span class="loc-label-${post.id}">${locText}</span>
         </a>`;
         if (!post.location_name) {
-          fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${post.latitude},${post.longitude}&key=GoogleMapsKey &language=th`)
+          fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${post.latitude},${post.longitude}&key=GoogleMapsKey&language=th`)
             .then(r => r.json()).then(data => {
               if (!data.results?.[0]) return;
               const comp = data.results[0].address_components;
@@ -859,7 +912,7 @@
       wrap.querySelector('.comment-toggle-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleComments(post.id, wrap); });
       wrap.querySelector('.comment-form').addEventListener('submit', (e) => { e.stopPropagation(); submitComment(e, post.id, wrap); });
       wrap.querySelector('.post-body-clickable').addEventListener('click', (e) => {
-        if (e.target.closest('a')) return;
+        if (e.target.closest('a')) return; 
         window.location.href = `post.html?id=${post.id}`;
       });
       wrap.querySelector('.post-body-clickable').style.cursor = 'pointer';
@@ -873,6 +926,9 @@
       return div.innerHTML;
     }
 
+    
+    
+    
     async function toggleLike(postId, cardEl) {
       const btn = cardEl.querySelector('.like-btn');
       const countEl = btn.querySelector('.like-count');
@@ -891,6 +947,9 @@
       }
     }
 
+    
+    
+    
     async function toggleComments(postId, cardEl) {
       const panel = cardEl.querySelector(`#comments-${postId}`);
       const wasOpen = panel.classList.contains('open');
@@ -947,6 +1006,9 @@
       await loadComments(postId, panel);
     }
 
+    
+    
+    
     async function loadSuggestedUsers() {
       const container = document.getElementById('suggestedUsers');
 
@@ -994,6 +1056,9 @@
       });
     }
 
+    
+    
+    
     function toggleProfileMenu(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -1007,6 +1072,7 @@
       window.location.href = 'auth.html';
     }
 
+    
     document.getElementById('fabBtn').addEventListener('click', () => {
       document.getElementById('composerOverlay').classList.add('open');
       document.getElementById('composerText').focus();
@@ -1020,6 +1086,64 @@
     });
 
     initPage();
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function applyMobileStyle() {
+      if (window.innerWidth <= 768) {
+        sidebar.style.setProperty('position', 'fixed', 'important');
+        sidebar.style.setProperty('left', '0', 'important');
+        sidebar.style.setProperty('top', '0', 'important');
+        sidebar.style.setProperty('bottom', '0', 'important');
+        sidebar.style.setProperty('height', '100vh', 'important');
+        sidebar.style.setProperty('width', '260px', 'important');
+        sidebar.style.setProperty('z-index', '580', 'important');
+        sidebar.style.setProperty('box-shadow', '4px 0 24px rgba(0,0,0,0.4)', 'important');
+        sidebar.style.setProperty('overflow-y', 'auto', 'important');
+        sidebar.style.setProperty('padding-top', '60px', 'important');
+        sidebar.style.setProperty('transition', 'transform 0.25s ease', 'important');
+        sidebar.style.transform = 'translateX(-280px)';
+        const nav = sidebar.querySelector('.nav');
+        if (nav) {
+          nav.style.setProperty('display', 'flex', 'important');
+          nav.style.setProperty('flex-direction', 'column', 'important');
+          nav.style.setProperty('gap', '4px', 'important');
+          nav.style.setProperty('grid-template-columns', 'unset', 'important');
+        }
+      } else {
+        sidebar.style.cssText = '';
+        const nav = sidebar.querySelector('.nav');
+        if (nav) nav.style.cssText = '';
+        hamburgerBtn.classList.remove('open');
+      }
+    }
+
+    applyMobileStyle();
+    window.addEventListener('resize', applyMobileStyle);
+
+    function openSidebar() {
+      sidebar.style.transform = 'translateX(0)';
+      overlay.classList.add('open');
+      hamburgerBtn.classList.add('open');
+    }
+    function closeSidebar() {
+      sidebar.style.transform = 'translateX(-280px)';
+      overlay.classList.remove('open');
+      hamburgerBtn.classList.remove('open');
+    }
+
+    hamburgerBtn.addEventListener('click', () => {
+      if (hamburgerBtn.classList.contains('open')) closeSidebar();
+      else openSidebar();
+    });
+    overlay.addEventListener('click', closeSidebar);
+    document.querySelectorAll('.nav a').forEach(a => {
+      a.addEventListener('click', closeSidebar);
+    });
+  });
   </script>
 </body>
 </html>
