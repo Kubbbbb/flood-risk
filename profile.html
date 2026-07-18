@@ -11,7 +11,7 @@
   <title>โปรไฟล์และโพสต์ของคุณ | FloodSense</title>
   
   <style>
-
+    
     .profile-card-wrapper {
       transition: all 0.3s ease;
     }
@@ -23,7 +23,7 @@
       padding: 32px;
     }
 
-   
+    
     .profile-details-view {
       display: flex;
       flex-direction: column;
@@ -100,7 +100,7 @@
       color: var(--ink);
     }
 
-
+    
     .edit-trigger-btn {
       display: inline-flex;
       align-items: center;
@@ -146,7 +146,7 @@
       transition: filter 0.3s ease;
     }
 
-   
+    
     .avatar-preview-wrapper.editable {
       cursor: pointer;
     }
@@ -183,7 +183,7 @@
       display: none;
     }
 
-  
+    
     .profile-form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -222,7 +222,7 @@
     .unique-status.available { color: var(--safe); }
     .unique-status.taken { color: var(--danger); }
 
-   
+    
     .edit-actions-container {
       display: flex;
       justify-content: flex-end;
@@ -232,7 +232,7 @@
       padding-top: 16px;
     }
 
-  
+    
     .fade-entrance {
       animation: tabFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
@@ -248,7 +248,7 @@
       }
     }
 
-  
+    
     .posts-section {
       margin-top: 12px;
     }
@@ -340,6 +340,7 @@
       color: var(--ink);
     }
 
+    
     .sidebar-profile-card {
       margin-top: auto;
       background: rgba(255, 255, 255, 0.06);
@@ -422,11 +423,44 @@
     .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); }
     .sidebar-menu-item.danger { color: #f87171; }
     .sidebar-menu-item.danger:hover { background: rgba(248,113,113,0.12); }
+
+    .hamburger-btn {
+    display: none;
+    position: fixed; top: 14px; left: 14px; z-index: 600;
+    width: 38px; height: 38px; border-radius: 10px;
+    background: transparent; border: none; cursor: pointer;
+    align-items: center; justify-content: center;
+    box-shadow: none;
+  }
+  .hamburger-btn svg { width: 18px; height: 18px; stroke: #0f1e2a; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+  .hamburger-btn.open { background: rgba(0,0,0,0.3); }
+  .hamburger-btn.open svg { stroke: #fff; }
+
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 570;
+    pointer-events: auto;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  @media (max-width: 768px) {
+    .hamburger-btn { display: flex !important; }
+    .main { width: 100% !important; }
+    .topbar { padding-left: 60px !important; }
+  }
   </style>
 </head>
 <body>
   <div class="app">
-
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="เมนู">
+      <svg viewBox="0 0 24 24">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+ 
     <aside class="sidebar" aria-label="เมนูหลัก">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -434,7 +468,6 @@
         </div>
         <div><h1>FloodSense</h1><p>Smart Flood Platform</p></div>
       </div>
-
 
       <nav class="nav">
         <p> ภาพรวม </p>
@@ -462,7 +495,7 @@
         </a>
       </nav>
 
-     
+      
       <div class="sidebar-profile-wrapper">
         <a class="sidebar-profile-card" id="sidebarProfileCard">
           <div class="sidebar-avatar">
@@ -489,24 +522,17 @@
       </div>
     </aside>
 
-
-    
     <main class="main">
       <header class="topbar">
         <div>
           <h2>ตั้งค่าข้อมูลโปรไฟล์และรายงานของคุณ</h2>
           <p>กรอกข้อมูลส่วนตัวสำหรับสิทธิ์ผู้รายงาน และจัดเก็บประวัติข้อมูลการแจ้งเตือน</p>
         </div>
-        <div class="top-actions">
-          <button class="sos-btn" id="openSos">
-            <svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>SOS
-          </button>
-        </div>
       </header>
 
       <section class="content">
         
-      
+
         <section class="panel" id="profilePanel">
           <div class="panel-head">
             <div class="panel-title">
@@ -515,7 +541,7 @@
             </div>
           </div>
           
-  
+
           <div class="profile-card-wrapper fade-entrance" id="profileViewMode">
             <div class="profile-setup-card">
               <div class="avatar-upload-container">
@@ -531,7 +557,7 @@
                     <h3 class="view-display-name" id="viewDisplayName">XXXX</h3>
                     <div class="view-username" id="viewUsername">@xxxx</div>
                   </div>
-                
+         
                   <button type="button" class="edit-trigger-btn" onclick="enableEditMode()">
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                     <span>แก้ไขโปรไฟล์</span>
@@ -560,7 +586,7 @@
           <div class="profile-card-wrapper" id="profileEditMode" style="display: none;">
             <form class="profile-setup-card" onsubmit="saveProfile(event)">
               
-       
+
               <div class="avatar-upload-container">
                 <label for="avatarFileInput" class="avatar-preview-wrapper editable" title="กดเพื่อเปลี่ยนรูปโปรไฟล์">
                   <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%232d86bf%22/%3E%3Ctext x=%22150%22 y=%22175%22 font-size=%22140%22 fill=%22white%22 text-anchor=%22middle%22%3E%3F%3C/text%3E%3C/svg%3E" alt="ตัวอย่างรูปโปรไฟล์">
@@ -573,7 +599,6 @@
                 <span style="font-size: 0.72rem; color: var(--muted); text-align: center;">ขนาด 1:1 บันทึกลง<br>Supabase Storage</span>
               </div>
 
-              
               <div class="profile-form-grid">
                 
                 <div class="field">
@@ -598,7 +623,7 @@
                   <textarea id="bioInput" placeholder="แนะนำสั้นๆ เพื่อให้ผู้ใช้คนอื่นทราบขอบเขตการทำงานของคุณ">อาสาสมัครป้องกันภัยพิบัติประจำพื้นที่อำเภอบางบาล คอยสแกนจุดอพยพ อัปเดตข้อมูลระดับน้ำในระบบเรียลไทม์ และประสานงานความช่วยเหลือผ่าน SOS Queue</textarea>
                 </div>
 
-             
+          
                 <div class="full-width edit-actions-container">
                   <button type="button" class="secondary" onclick="disableEditMode()">ยกเลิก</button>
                   <button type="submit" class="primary">บันทึกข้อมูลส่วนตัว</button>
@@ -629,7 +654,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-
   <script src="js/bundle.js"></script>
   
   <script>
@@ -641,12 +665,11 @@
     updateLiveClock();
     setInterval(updateLiveClock, 30000);
 
-
     function enableEditMode() {
       const viewBlock = document.getElementById('profileViewMode');
       const editBlock = document.getElementById('profileEditMode');
 
-
+ 
       viewBlock.style.display = 'none';
       editBlock.style.display = 'block';
       editBlock.classList.add('fade-entrance');
@@ -661,6 +684,7 @@
       document.getElementById('usernameInput').value = document.getElementById('viewUsername').textContent.replace('@', '');
       document.getElementById('bioInput').value = document.getElementById('viewBio').textContent;
 
+  
       editBlock.style.display = 'none';
       editBlock.classList.remove('fade-entrance');
       
@@ -668,7 +692,6 @@
       viewBlock.classList.add('fade-entrance');
     }
 
-   
     const { createClient } = supabase;
     const sb = createClient(
       'DatabaseLink',
@@ -676,7 +699,6 @@
     );
 
     let currentUser = null;
-
 
     function makeInitialsAvatar(text) {
       const initial = (text || '?').charAt(0).toUpperCase();
@@ -706,7 +728,7 @@
       document.getElementById('viewBio').textContent         = bio;
       document.getElementById('sidebarDisplayName').textContent    = displayName || emailPrefix;
       document.getElementById('sidebarUsernameHandle').textContent = '@' + username;
- 
+
       const [{ count: followers }, { count: following }] = await Promise.all([
         sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id),
         sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', currentUser.id)
@@ -736,7 +758,7 @@
       loadMyPosts();
     }
 
-
+   
     function severityLabel(sev) {
       return { low: 'ความเสี่ยงต่ำ', medium: 'ปานกลาง', high: 'สูง', critical: 'ระดับวิกฤต' }[sev] || '';
     }
@@ -870,13 +892,12 @@
       }, 400);
     }
 
-   
     let pendingAvatarFile = null;
 
     async function saveProfile(event) {
       event.preventDefault();
 
-
+     
       if (!currentUser) {
         const { data: { session } } = await sb.auth.getSession();
         if (!session) { showSystemToast('กรุณาเข้าสู่ระบบก่อน'); return; }
@@ -887,7 +908,7 @@
       const username    = document.getElementById('usernameInput').value.trim();
       const bio         = document.getElementById('bioInput').value.trim();
 
-      // ตรวจ username ซ้ำก่อนบันทึก
+     
       const { data: existing } = await sb.from('profiles')
         .select('id')
         .eq('username', username)
@@ -928,7 +949,6 @@
         return;
       }
 
- 
       document.getElementById('viewDisplayName').textContent = displayName;
       document.getElementById('viewUsername').textContent    = '@' + username;
       document.getElementById('viewBio').textContent         = bio;
@@ -946,7 +966,6 @@
       showSystemToast('บันทึกข้อมูลสำเร็จ');
     }
 
-   
     function previewImage(event) {
       const file = event.target.files[0];
       if (file) {
@@ -959,7 +978,6 @@
         reader.readAsDataURL(file);
       }
     }
-
 
     function toggleProfileMenu(e) {
       e.preventDefault();
@@ -984,6 +1002,64 @@
         setTimeout(() => toast.classList.remove('show'), 3500);
       }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function applyMobileStyle() {
+      if (window.innerWidth <= 768) {
+        sidebar.style.setProperty('position', 'fixed', 'important');
+        sidebar.style.setProperty('left', '0', 'important');
+        sidebar.style.setProperty('top', '0', 'important');
+        sidebar.style.setProperty('bottom', '0', 'important');
+        sidebar.style.setProperty('height', '100vh', 'important');
+        sidebar.style.setProperty('width', '260px', 'important');
+        sidebar.style.setProperty('z-index', '580', 'important');
+        sidebar.style.setProperty('box-shadow', '4px 0 24px rgba(0,0,0,0.4)', 'important');
+        sidebar.style.setProperty('overflow-y', 'auto', 'important');
+        sidebar.style.setProperty('padding-top', '60px', 'important');
+        sidebar.style.setProperty('transition', 'transform 0.25s ease', 'important');
+        sidebar.style.transform = 'translateX(-280px)';
+        const nav = sidebar.querySelector('.nav');
+        if (nav) {
+          nav.style.setProperty('display', 'flex', 'important');
+          nav.style.setProperty('flex-direction', 'column', 'important');
+          nav.style.setProperty('gap', '4px', 'important');
+          nav.style.setProperty('grid-template-columns', 'unset', 'important');
+        }
+      } else {
+        sidebar.style.cssText = '';
+        const nav = sidebar.querySelector('.nav');
+        if (nav) nav.style.cssText = '';
+        hamburgerBtn.classList.remove('open');
+      }
+    }
+
+    applyMobileStyle();
+    window.addEventListener('resize', applyMobileStyle);
+
+    function openSidebar() {
+      sidebar.style.transform = 'translateX(0)';
+      overlay.classList.add('open');
+      hamburgerBtn.classList.add('open');
+    }
+    function closeSidebar() {
+      sidebar.style.transform = 'translateX(-280px)';
+      overlay.classList.remove('open');
+      hamburgerBtn.classList.remove('open');
+    }
+
+    hamburgerBtn.addEventListener('click', () => {
+      if (hamburgerBtn.classList.contains('open')) closeSidebar();
+      else openSidebar();
+    });
+    overlay.addEventListener('click', closeSidebar);
+    document.querySelectorAll('.nav a').forEach(a => {
+      a.addEventListener('click', closeSidebar);
+    });
+  });
   </script>
 </body>
 </html>
